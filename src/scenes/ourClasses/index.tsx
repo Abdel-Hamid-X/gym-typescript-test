@@ -109,9 +109,11 @@ const OurClasses = ({ setselectedPage }: Props) => {
                         className="
                         w-[2800px]
                         whitespace-nowrap">
-                        {classes.map((item: ClassType, index) => (
+                        {classes.map((item: ClassType, _index) => (
                             <Class
-                                key={'${item.name-${index}'}
+                                key={
+                                    "${item.name-${_index}"
+                                }
                                 name={item.name}
                                 description={item.description}
                                 image={item.image}
