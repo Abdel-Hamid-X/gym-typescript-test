@@ -1,22 +1,12 @@
-import {
-    SelectedPage,
-} from "@/shared/types"
-import type {
-    BenefitType
-} from "@/shared/types"
-import {
-    AcademicCapIcon,
-    HomeModernIcon,
-    UserGroupIcon
-} from "@heroicons/react/24/solid"
-import {
-    motion,
-    stagger
-} from "framer-motion"
+import { SelectedPage } from "@/shared/types"
+import type { BenefitType } from "@/shared/types"
+import { AcademicCapIcon, HomeModernIcon, UserGroupIcon } from "@heroicons/react/24/solid"
+import { motion } from "framer-motion"
 import ActionButton from '@/shared/ActionButton';
-import BenefitsPageGraphic from "@/assets/BenefitsPageGraphic.png"
+import BenefitsPage2 from "@/assets/BenefitsPage2.png"
 import HText from "@/shared/HText"
 import Benefit from "./Benefit"
+import { useLanguage } from "@/shared/LanguageContext";
 
 const Container = {
     hidden: {},
@@ -27,29 +17,31 @@ const Container = {
     }
 }
 
-const benefits: Array<BenefitType> = [
-    {
-        icon: <HomeModernIcon className="h-6 w-6" />,
-        title: "State of the Art Facilities",
-        description: "Our facilities are equipped with the latest fitness technology to help you achieve your goals."
-    },
-    {
-        icon: <UserGroupIcon className="h-6 w-6" />,
-        title: "100's of Diverse Classes",
-        description: "We offer a wide variety of classes to suit all fitness levels and interests."
-    },
-    {
-        icon: <AcademicCapIcon className="h-6 w-6" />,
-        title: "Expert and Pro Trainers",
-        description: "Our trainers are certified professionals who are passionate about helping you succeed."
-    },
-]
-
 type Props = {
     setselectedPage: (value: SelectedPage) => void
 }
 
 const Benefits = ({ setselectedPage }: Props) => {
+    const { t } = useLanguage();
+
+    const translatedBenefits: Array<BenefitType> = [
+        {
+            icon: <HomeModernIcon className="h-6 w-6" />,
+            title: t("benefits_item_1_title"),
+            description: t("benefits_item_1_desc")
+        },
+        {
+            icon: <UserGroupIcon className="h-6 w-6" />,
+            title: t("benefits_item_2_title"),
+            description: t("benefits_item_2_desc")
+        },
+        {
+            icon: <AcademicCapIcon className="h-6 w-6" />,
+            title: t("benefits_item_3_title"),
+            description: t("benefits_item_3_desc")
+        },
+    ];
+
     return (
         <section
             id="benefits"
@@ -88,14 +80,12 @@ const Benefits = ({ setselectedPage }: Props) => {
                             x: 0
                         },
                     }}>
-                    <HText>MORE THAN JUST A GYM.</HText>
+                    <HText>{t("benefits_title_1")}</HText>
                     <p
                         className="
                                 my-5 
                                 text-sm">
-                        We provide world class fitness equipment, trainers and classes to
-                        get you to your ultimate fitness goals with ease. We provide true
-                        care into each and every member.
+                        {t("benefits_desc_1")}
                     </p>
                 </motion.div>
                 {/* BENEFITS */}
@@ -113,7 +103,7 @@ const Benefits = ({ setselectedPage }: Props) => {
                         amount: 0.5
                     }}
                     variants={Container}>
-                    {benefits.map((benefit: BenefitType) => (
+                    {translatedBenefits.map((benefit: BenefitType) => (
                         <Benefit
                             key={benefit.title}
                             icon={benefit.icon}
@@ -127,8 +117,11 @@ const Benefits = ({ setselectedPage }: Props) => {
                     {/* GRAPHIC */}
                     <img
                         className="
-                            mx-auto"
-                        src={BenefitsPageGraphic}
+                            mx-auto
+                            w-full
+                            max-w-[420px]
+                            md:max-w-[480px]"
+                        src={BenefitsPage2}
                         alt="benifits-page-graphic" />
                     {/* DESCRIPTIONS */}
                     <div>
@@ -163,11 +156,11 @@ const Benefits = ({ setselectedPage }: Props) => {
                                         },
                                     }}>
                                     <HText>
-                                        MILLIONS OF HAPPY MEMBERS GETTING {" "}
+                                        {t("benefits_title_2")} {" "}
                                         <span
                                             className="
                                             text-primary-500">
-                                            FIT
+                                            {t("benefits_title_span")}
                                         </span>
                                     </HText>
                                 </motion.div>
@@ -182,7 +175,7 @@ const Benefits = ({ setselectedPage }: Props) => {
                             }}
                             whileInView="visible"
                             transition={{
-                                delay:0.2, 
+                                delay: 0.2,
                                 duration: 0.5
                             }}
                             variants={{
@@ -197,19 +190,11 @@ const Benefits = ({ setselectedPage }: Props) => {
                             }}>
                             <p
                                 className="my-5">
-                                Nascetur aenean massa auctor tincidunt. Iaculis potenti amet
-                                egestas ultrices consectetur adipiscing ultricies enim. Pulvinar
-                                fames vitae vitae quis. Quis amet vulputate tincidunt at in
-                                nulla nec. Consequat sed facilisis dui sit egestas ultrices
-                                tellus. Ullamcorper arcu id pretium sapien proin integer nisl.
-                                Felis orci diam odio.
+                                {t("benefits_desc_2")}
                             </p>
                             <p
                                 className="mb-5">
-                                Fringilla a sed at suspendisse ut enim volutpat. Rhoncus vel est
-                                tellus quam porttitor. Mauris velit euismod elementum arcu neque
-                                facilisi. Amet semper tortor facilisis metus nibh. Rhoncus sit
-                                enim mattis odio in risus nunc.
+                                {t("benefits_desc_3")}
                             </p>
                         </motion.div>
                         {/* BUTTON */}
@@ -226,7 +211,7 @@ const Benefits = ({ setselectedPage }: Props) => {
                                 before:content-sparkles">
                                 <ActionButton
                                     setselectedPage={setselectedPage}>
-                                    Join Now
+                                    {t("home_join_now")}
                                 </ActionButton>
                             </div>
                         </div>

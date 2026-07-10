@@ -1,34 +1,50 @@
+import { useState } from "react"
 import { SelectedPage } from "@/shared/types"
 import { motion } from "framer-motion"
 import { useForm } from "react-hook-form"
 import ContactUsPageGraphic from "@/assets/ContactUsPageGraphic.png"
 import Htext from "@/shared/HText"
+import { useAuth } from "@/auth/AuthContext"
+import { useLanguage } from "@/shared/LanguageContext"
+
 type Props = {
     setselectedPage: (value: SelectedPage) => void
 }
 
+type FormValues = {
+    name: string
+    email: string
+    message: string
+}
+
 const ContactUs = ({ setselectedPage }: Props) => {
+    const { addMessage } = useAuth()
+    const { t } = useLanguage()
+    const [submitted, setSubmitted] = useState(false)
 
     const inputStyles = `
         mb-5
         w-full
         rounded-lg
-        bg-primary-300
+        bg-gray-100
         px-5
         py-3
-        placeholder-white`;
+        text-white
+        placeholder-gray-500
+        outline-primary-500`;
 
     const {
         register,
-        trigger,
+        handleSubmit,
+        reset,
         formState: { errors },
-    } = useForm();
+    } = useForm<FormValues>()
 
-    const onSubmit = async (e: any) => {
-        const isValid = await trigger()
-        if (!isValid) {
-            e.preventDefault();
-        }
+    const onSubmit = (data: FormValues) => {
+        addMessage(data.name, data.email, data.message)
+        reset()
+        setSubmitted(true)
+        setTimeout(() => setSubmitted(false), 5000)
     }
 
     return (
@@ -65,18 +81,13 @@ const ContactUs = ({ setselectedPage }: Props) => {
                         },
                     }}>
                     <Htext>
-                        <span
-                            className="text-primary-500">
-                            JOIN NOW
+                        <span className="text-primary-500">
+                            {t("contact_join")}
                         </span>
-                        TO GET IN SHAPE
+                        {t("contact_shape")}
                     </Htext>
-                    <p
-                        className="
-                        my-5">
-                        Congue adipiscing risus commodo placerat. Tellus et in feugiat nisl
-                        sapien vel rhoncus. Placerat at in enim pellentesque. Nulla
-                        adipiscing leo egestas nisi elit risus sit. Nunc cursus sagittis.
+                    <p className="my-5">
+                        {t("contact_desc")}
                     </p>
                 </motion.div>
                 {/* FORM AND IMAGE */}
@@ -110,44 +121,50 @@ const ContactUs = ({ setselectedPage }: Props) => {
                                 y: 0
                             },
                         }}>
-                        <form
-                            target="_blank"
-                            onSubmit={onSubmit}
-                            action="https://formsubmit.co/benallelmarwen@gmail.com"
-                            method="POST">
+
+                        {/* SUCCESS TOAST */}
+                        {submitted && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0 }}
+                                className="mb-6 flex items-center gap-3 rounded-lg border border-green-500/40 bg-green-950/60 px-5 py-4 text-green-400"
+                            >
+                                <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span className="font-semibold">{t("contact_toast")}</span>
+                            </motion.div>
+                        )}
+
+                        <form onSubmit={handleSubmit(onSubmit)}>
                             <input
                                 className={inputStyles}
                                 type="text"
-                                placeholder="NAME"
+                                placeholder={t("contact_placeholder_name")}
                                 {...register("name", {
                                     required: true,
                                     maxLength: 100,
                                 })} />
                             {errors.name && (
-                                <p
-                                    className="
-                                    mt-1
-                                    text-primary-500">
-                                    {errors.name.type === "required" && "this feild is required."}
-                                    {errors.name.type === "maxLength" && "max lenght is 100 char."}
+                                <p className="mt-1 text-primary-500">
+                                    {errors.name.type === "required" && t("contact_err_required")}
+                                    {errors.name.type === "maxLength" && t("contact_err_max_char")}
                                 </p>
                             )}
 
                             <input
                                 className={inputStyles}
                                 type="text"
-                                placeholder="EMAIL"
+                                placeholder={t("contact_placeholder_email")}
                                 {...register("email", {
                                     required: true,
                                     pattern: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                                 })} />
                             {errors.email && (
-                                <p
-                                    className="
-                                    mt-1
-                                    text-primary-500">
-                                    {errors.email.type === "required" && "this feild is required."}
-                                    {errors.email.type === "pattern" && "invalid email address."}
+                                <p className="mt-1 text-primary-500">
+                                    {errors.email.type === "required" && t("contact_err_required")}
+                                    {errors.email.type === "pattern" && t("contact_err_email")}
                                 </p>
                             )}
 
@@ -155,18 +172,15 @@ const ContactUs = ({ setselectedPage }: Props) => {
                                 className={inputStyles}
                                 rows={4}
                                 cols={50}
-                                placeholder="MESSAGE"
+                                placeholder={t("contact_placeholder_message")}
                                 {...register("message", {
                                     required: true,
                                     maxLength: 2000,
                                 })} />
                             {errors.message && (
-                                <p
-                                    className="
-                                    mt-1
-                                    text-primary-500">
-                                    {errors.message.type === "required" && "this feild is required."}
-                                    {errors.message.type === "maxLength" && "max lenght is 2000 char."}
+                                <p className="mt-1 text-primary-500">
+                                    {errors.message.type === "required" && t("contact_err_required")}
+                                    {errors.message.type === "maxLength" && t("contact_err_max_msg")}
                                 </p>
                             )}
                             <button
@@ -177,11 +191,16 @@ const ContactUs = ({ setselectedPage }: Props) => {
                                 bg-secondary-500 
                                 px-20 
                                 py-3 
+                                font-bold
+                                uppercase
+                                tracking-wide
+                                text-white
                                 transition 
                                 duration-500 
+                                hover:bg-primary-500
                                 hover:text-white"
                             >
-                                SUBMIT
+                                {t("contact_submit")}
                             </button>
                         </form>
                     </motion.div>

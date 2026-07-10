@@ -4,24 +4,27 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        "gray-20": "#F8F4EB",
-        "gray-50": "#EFE6E6",
-        "gray-100": "#DFCCCC",
-        "gray-500": "#5E0000",
-        "primary-100": "#FFE1E0",
-        "primary-300": "#FFA6A3",
-        "primary-500": "#FF6B66",
-        "secondary-400": "#FFCD5B",
-        "secondary-500": "#FFC132",
+        white: "var(--color-text-strong)",
+        "gray-20": "var(--color-bg)",
+        "gray-50": "var(--color-surface)",
+        "gray-100": "var(--color-border)",
+        "gray-300": "var(--color-text-soft)",
+        "gray-400": "var(--color-text-muted)",
+        "gray-500": "var(--color-text-muted)",
+        "primary-100": "var(--color-panel)",
+        "primary-300": "var(--color-accent-cyan)",
+        "primary-500": "var(--color-accent-red)",
+        "secondary-400": "var(--color-accent-orange-soft)",
+        "secondary-500": "var(--color-accent-orange)",
       },
       backgroundImage: (theme) => ({
         "gradient-yellowred":
           "linear-gradient(90deg, #FF616A 0%, #FFC837 100%)",
-        "mobile-home": "url('./assets/HomePageGraphic.png')",
+        "mobile-home": "url('./assets/HomePageImg.png')",
       }),
       fontFamily: {
-        dmsans: ["DM Sans", "sans-serif"],
-        montserrat: ["Montserrat", "sans-serif"],
+        dmsans: ["Oswald", "sans-serif"],
+        montserrat: ["Bebas Neue", "Oswald", "sans-serif"],
       },
       content: {
         evolvetext: "url('./assets/EvolveText.png')",

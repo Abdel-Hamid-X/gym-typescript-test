@@ -17,7 +17,10 @@ const ActionButton = ( {children,setselectedPage}: Props) => {
         hover:bg-primary-500 
         hover:text-white 
         transition 
-        duration-300"
+        duration-300
+        uppercase
+        font-bold
+        tracking-wide"
         onClick={
             () => setselectedPage(SelectedPage.ContactUs)
         }

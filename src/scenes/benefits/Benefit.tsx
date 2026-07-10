@@ -28,6 +28,7 @@ const Benefit = ({ icon, title, description, setselectedPage }: Props) => {
         rounded-md  
         border-2
         border-gray-100
+        bg-gray-50
         px-5
         py-16
         text-center ">
@@ -43,7 +44,7 @@ const Benefit = ({ icon, title, description, setselectedPage }: Props) => {
                 rounded-full
                 border-2
                 border-gray-100
-                bg-primary-100
+                bg-primary-500
                 p-4'>
                     {icon}
                 </div>
@@ -56,15 +57,18 @@ const Benefit = ({ icon, title, description, setselectedPage }: Props) => {
             </h4>
             <p
                 className='
-            my-3'>
+            my-3
+            text-gray-500'>
                 {description}
             </p>
             <AnchorLink
                 className='
                 text-sm 
                 font-bold 
-                text-primary-500 
+                text-primary-300 
                 underline 
+                uppercase
+                tracking-wide
                 hover:text-secondary-500'
                 onClick={
                     () => setselectedPage(

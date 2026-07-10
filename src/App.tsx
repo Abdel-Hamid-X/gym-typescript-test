@@ -6,8 +6,18 @@ import ContactUs from "@/scenes/contactUs"
 import Footer from"@/scenes/footer"
 import { useEffect, useState } from "react";
 import { SelectedPage } from "@/shared/types";
+import { Route, Routes } from "react-router-dom";
+import { AuthProvider } from "@/auth/AuthContext";
+import ProtectedRoute from "@/auth/ProtectedRoute";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Profile from "@/pages/Profile";
+import SubscriptionPlans from "@/pages/SubscriptionPlans";
+import NotFound from "@/pages/NotFound";
+import AdminRoute from "@/auth/AdminRoute";
+import AdminDashboard from "@/pages/AdminDashboard";
 
-function App() {
+const LandingPage = () => {
   const [
     selectedPage,
     setselectedPage] = useState<SelectedPage>(
@@ -63,6 +73,43 @@ function App() {
 
       </div>
     </>
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/subscriptions"
+          element={
+            <ProtectedRoute role="member">
+              <SubscriptionPlans />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </AuthProvider>
   )
 }
 
