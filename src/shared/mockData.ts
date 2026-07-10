@@ -9,6 +9,22 @@ export interface User {
   personalGoals?: string;
 }
 
+export interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  receivedAt: string; // ISO date string
+  read: boolean;
+}
+
+export interface GymClass {
+  id: string;
+  name: string;
+  description: string;
+  image: string; // resolved asset URL or base64 data URL
+}
+
 export interface SubscriptionPlan {
   id: string;
   name: string;

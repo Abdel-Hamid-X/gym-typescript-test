@@ -1,10 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "@/assets/Logo.png";
 import { useAuth } from "@/auth/AuthContext";
+import { useLanguage } from "@/shared/LanguageContext";
 
 const SubscriptionPlans = () => {
   const { user, subscriptionPlans, subscribeCurrentUser, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const handleLogout = () => {
     logout();
@@ -29,28 +31,27 @@ const SubscriptionPlans = () => {
               className="rounded-md border-2 border-primary-500 px-6 py-2 font-bold uppercase tracking-wide text-primary-300 transition duration-300 hover:bg-primary-500 hover:text-white"
               to="/profile"
             >
-              Profile
+              {t("plans_profile")}
             </Link>
             <button
               className="rounded-md bg-secondary-500 px-6 py-2 font-bold uppercase tracking-wide text-white transition duration-300 hover:bg-primary-500"
               onClick={handleLogout}
               type="button"
             >
-              Logout
+              {t("plans_logout")}
             </button>
           </div>
         </header>
 
         <section className="rounded-md border-2 border-gray-100 bg-gray-50 px-8 py-10">
           <p className="text-sm font-bold uppercase tracking-wide text-primary-300">
-            Subscription Plans
+            {t("plans_subtitle")}
           </p>
           <h1 className="mt-2 font-montserrat text-5xl font-bold uppercase tracking-wide">
-            Choose Your Access
+            {t("plans_heading")}
           </h1>
           <p className="mt-4 max-w-2xl text-gray-500">
-            Prototype payment flow: selecting a plan updates your member profile with a
-            30-day subscription.
+            {t("plans_proto")}
           </p>
         </section>
 
@@ -68,7 +69,7 @@ const SubscriptionPlans = () => {
               >
                 <div>
                   <p className="text-sm font-bold uppercase tracking-wide text-primary-300">
-                    {isCurrentPlan ? "Current Plan" : "Available Plan"}
+                    {isCurrentPlan ? t("plans_current_plan") : t("plans_available")}
                   </p>
                   <h2 className="mt-3 font-montserrat text-4xl uppercase tracking-wide">
                     {plan.name}
@@ -94,7 +95,7 @@ const SubscriptionPlans = () => {
                   onClick={() => handleSubscribe(plan.name)}
                   type="button"
                 >
-                  {isCurrentPlan ? "Active Plan" : "Select Plan"}
+                  {isCurrentPlan ? t("plans_active") : t("plans_select")}
                 </button>
               </article>
             );

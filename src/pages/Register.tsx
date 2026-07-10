@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import Logo from "@/assets/Logo.png";
 import { useAuth } from "@/auth/AuthContext";
+import { useLanguage } from "@/shared/LanguageContext";
 
 const Register = () => {
   const { isAuthenticated, register } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -21,12 +23,16 @@ const Register = () => {
     setError("");
 
     if (!name || !email || !password) {
-      setError("Name, email, and password are required.");
+      setError(t("auth_error_required"));
       return;
     }
 
-    register({ name, email, password });
-    navigate("/profile", { replace: true });
+    const success = register({ name, email, password });
+    if (success) {
+      navigate("/profile", { replace: true });
+    } else {
+      setError(t("auth_error_existing"));
+    }
   };
 
   return (
@@ -37,14 +43,14 @@ const Register = () => {
         </Link>
 
         <section className="rounded-md border-2 border-gray-100 bg-gray-50 px-8 py-10">
-          <h1 className="font-montserrat text-4xl font-bold uppercase tracking-wide">Become a member</h1>
+          <h1 className="font-montserrat text-4xl font-bold uppercase tracking-wide">{t("auth_welcome_member")}</h1>
           <p className="mt-3 text-sm uppercase tracking-wide text-gray-500">
-            Create a local prototype account and step into the member area.
+            {t("auth_create_desc")}
           </p>
 
           <form className="mt-8 flex flex-col gap-5" onSubmit={handleSubmit}>
             <label className="flex flex-col gap-2 text-sm font-bold">
-              Name
+              {t("auth_name")}
               <input
                 className="rounded-lg bg-primary-100 px-5 py-3 font-normal text-white outline-primary-500"
                 type="text"
@@ -54,7 +60,7 @@ const Register = () => {
             </label>
 
             <label className="flex flex-col gap-2 text-sm font-bold">
-              Email
+              {t("auth_email")}
               <input
                 className="rounded-lg bg-primary-100 px-5 py-3 font-normal text-white outline-primary-500"
                 type="email"
@@ -64,7 +70,7 @@ const Register = () => {
             </label>
 
             <label className="flex flex-col gap-2 text-sm font-bold">
-              Password
+              {t("auth_password")}
               <input
                 className="rounded-lg bg-primary-100 px-5 py-3 font-normal text-white outline-primary-500"
                 type="password"
@@ -79,14 +85,14 @@ const Register = () => {
               className="rounded-md bg-secondary-500 px-10 py-3 font-bold uppercase tracking-wide text-white transition duration-300 hover:bg-primary-500"
               type="submit"
             >
-              Create Account
+              {t("auth_create_btn")}
             </button>
           </form>
 
           <p className="mt-6 text-sm">
-            Already have access?{" "}
+            {t("auth_already")}{" "}
             <Link className="font-bold text-primary-500 underline" to="/login">
-              Sign in
+              {t("auth_sign_in_link")}
             </Link>
           </p>
         </section>

@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "@/assets/Logo.png";
 import { useAuth } from "@/auth/AuthContext";
-import { Coach, Equipment, SubscriptionPlan } from "@/shared/mockData";
+import { Coach, Equipment, GymClass, SubscriptionPlan } from "@/shared/mockData";
+import { useScrollableTabs } from "@/shared/useScrollableTabs";
+import { useLanguage } from "@/shared/LanguageContext";
 
 const AdminDashboard = () => {
   const {
@@ -11,6 +13,8 @@ const AdminDashboard = () => {
     subscriptionPlans,
     coaches,
     equipment,
+    gymClasses,
+    messages,
     logout,
     updateUserSubscription,
     deleteUser,
@@ -23,10 +27,18 @@ const AdminDashboard = () => {
     addEquipment,
     editEquipment,
     deleteEquipment,
+    addGymClass,
+    editGymClass,
+    deleteGymClass,
+    markMessageRead,
+    deleteMessage,
   } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
-  const [activeTab, setActiveTab] = useState<"members" | "subscriptions" | "coaches" | "equipment">("members");
+  const [activeTab, setActiveTab] = useState<"members" | "subscriptions" | "coaches" | "equipment" | "classes" | "inbox">("members");
+  const unreadCount = messages.filter((m) => !m.read).length;
+  const tabBarProps = useScrollableTabs();
 
   // Subscription Plan Forms State
   const [planName, setPlanName] = useState("");
@@ -161,7 +173,7 @@ const AdminDashboard = () => {
   return (
     <main className="min-h-screen bg-gray-20 px-6 py-10 text-white animate-fade-in">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-        <header className="flex items-center justify-between gap-6">
+        <header className="flex flex-wrap items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <Link to="/" className="w-fit">
               <img alt="Evogym logo" src={Logo} />
@@ -181,64 +193,92 @@ const AdminDashboard = () => {
         </header>
 
         {/* TAB CONTROLS */}
-        <div className="flex border-b border-gray-100 bg-gray-50 rounded-t-md px-4 pt-2">
+        <div
+          {...tabBarProps}
+          className="flex overflow-x-auto border-b border-gray-100 bg-gray-50 rounded-t-md px-4 pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus:outline-none"
+        >
           <button
-            className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
+            className={`shrink-0 whitespace-nowrap px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
               activeTab === "members"
                 ? "border-secondary-500 text-secondary-500"
                 : "border-transparent text-gray-400 hover:text-white"
             }`}
             onClick={() => setActiveTab("members")}
           >
-            Manage Members
+            {t("admin_tab_members")}
           </button>
           <button
-            className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
+            className={`shrink-0 whitespace-nowrap px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
               activeTab === "coaches"
                 ? "border-secondary-500 text-secondary-500"
                 : "border-transparent text-gray-400 hover:text-white"
             }`}
             onClick={() => setActiveTab("coaches")}
           >
-            Manage Coaches
+            {t("admin_tab_coaches")}
           </button>
           <button
-            className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
+            className={`shrink-0 whitespace-nowrap px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
               activeTab === "subscriptions"
                 ? "border-secondary-500 text-secondary-500"
                 : "border-transparent text-gray-400 hover:text-white"
             }`}
             onClick={() => setActiveTab("subscriptions")}
           >
-            Manage Subscriptions
+            {t("admin_tab_subscriptions")}
           </button>
           <button
-            className={`px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
+            className={`shrink-0 whitespace-nowrap px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
               activeTab === "equipment"
                 ? "border-secondary-500 text-secondary-500"
                 : "border-transparent text-gray-400 hover:text-white"
             }`}
             onClick={() => setActiveTab("equipment")}
           >
-            Manage Equipment
+            {t("admin_tab_equipment")}
+          </button>
+          <button
+            className={`relative shrink-0 whitespace-nowrap px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
+              activeTab === "inbox"
+                ? "border-secondary-500 text-secondary-500"
+                : "border-transparent text-gray-400 hover:text-white"
+            }`}
+            onClick={() => setActiveTab("inbox")}
+          >
+            {t("admin_tab_inbox")}
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary-500 text-[10px] font-black text-white">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+          <button
+            className={`shrink-0 whitespace-nowrap px-6 py-3 font-bold text-sm border-b-2 transition-colors ${
+              activeTab === "classes"
+                ? "border-secondary-500 text-secondary-500"
+                : "border-transparent text-gray-400 hover:text-white"
+            }`}
+            onClick={() => setActiveTab("classes")}
+          >
+            {t("admin_tab_classes")}
           </button>
         </div>
 
         {/* TAB BODY */}
-        <section className="rounded-b-md border-2 border-t-0 border-gray-100 bg-gray-50 px-8 py-10">
+        <section className="overflow-hidden rounded-b-md border-2 border-t-0 border-gray-100 bg-gray-50 px-4 py-8 sm:px-8 sm:py-10">
           {/* MEMBERS TAB */}
           {activeTab === "members" && (
             <div>
-              <h2 className="text-2xl font-bold text-white mb-6 animate-slide-down">Registered Gym Members</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+              <h2 className="text-2xl font-bold text-white mb-6 animate-slide-down">{t("admin_members_heading")}</h2>
+              <div className="max-w-full overflow-x-auto">
+                <table className="min-w-[760px] text-left border-collapse">
                   <thead>
                     <tr className="border-b border-gray-100 text-sm font-bold text-gray-300 bg-primary-100">
-                      <th className="py-3 px-4">Name</th>
-                      <th className="py-3 px-4">Email</th>
-                      <th className="py-3 px-4">Tier</th>
-                      <th className="py-3 px-4">Subscription Expires</th>
-                      <th className="py-3 px-4">Actions</th>
+                      <th className="py-3 px-4">{t("admin_col_name")}</th>
+                      <th className="py-3 px-4">{t("admin_col_email")}</th>
+                      <th className="py-3 px-4">{t("admin_col_tier")}</th>
+                      <th className="py-3 px-4">{t("admin_col_expires")}</th>
+                      <th className="py-3 px-4">{t("admin_col_actions")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -273,7 +313,7 @@ const AdminDashboard = () => {
                                   {isExpired ? " (Expired)" : ""}
                                 </span>
                               ) : (
-                                "No active plan"
+                                t("admin_no_plan")
                               )}
                             </td>
                             <td className="py-3 px-4 flex flex-wrap gap-2">
@@ -293,7 +333,7 @@ const AdminDashboard = () => {
                                 onClick={() => deleteUser(m.email)}
                                 className="rounded bg-red-950/60 hover:bg-red-900 border border-red-500/30 text-red-400 px-2 py-1 text-xs font-bold"
                               >
-                                Delete
+                                {t("admin_delete")}
                               </button>
                             </td>
                           </tr>
@@ -310,14 +350,14 @@ const AdminDashboard = () => {
             <div className="flex flex-col gap-10">
               <div className="rounded-md border border-gray-100 p-6 bg-primary-100">
                 <h3 className="text-lg font-bold text-white mb-4">
-                  {editingPlan ? `Edit Plan: ${editingPlan.name}` : "Add Subscription Plan"}
+                  {editingPlan ? `${t("admin_edit_plan")}${editingPlan.name}` : t("admin_add_plan")}
                 </h3>
                 <form
                   onSubmit={editingPlan ? handleSavePlanEdit : handleAddPlan}
                   className="grid gap-4 md:grid-cols-3"
                 >
                   <label className="flex flex-col gap-1 text-xs font-bold text-gray-300">
-                    Plan Name
+                    {t("admin_plan_name")}
                     <input
                       type="text"
                       value={editingPlan ? editingPlan.name : planName}
@@ -332,7 +372,7 @@ const AdminDashboard = () => {
                     />
                   </label>
                   <label className="flex flex-col gap-1 text-xs font-bold text-gray-300">
-                    Monthly Price
+                    {t("admin_plan_price")}
                     <input
                       type="number"
                       min={0}
@@ -347,7 +387,7 @@ const AdminDashboard = () => {
                     />
                   </label>
                   <label className="flex flex-col gap-1 text-xs font-bold text-gray-300 md:col-span-3">
-                    Description
+                    {t("admin_description")}
                     <textarea
                       rows={3}
                       value={editingPlan ? editingPlan.description : planDescription}
@@ -361,7 +401,7 @@ const AdminDashboard = () => {
                     />
                   </label>
                   <label className="flex flex-col gap-1 text-xs font-bold text-gray-300 md:col-span-3">
-                    Features
+                    {t("admin_features")}
                     <textarea
                       rows={4}
                       value={
@@ -385,7 +425,7 @@ const AdminDashboard = () => {
                       type="submit"
                       className="rounded bg-secondary-500 hover:bg-primary-500 text-white font-bold px-6 py-2 text-sm"
                     >
-                      {editingPlan ? "Save Changes" : "Create Plan"}
+                      {editingPlan ? t("admin_save") : t("admin_add_btn")}
                     </button>
                     {editingPlan && (
                       <button
@@ -393,7 +433,7 @@ const AdminDashboard = () => {
                         onClick={() => setEditingPlan(null)}
                         className="rounded bg-gray-100/10 hover:bg-gray-100/20 text-gray-300 font-bold px-6 py-2 text-sm"
                       >
-                        Cancel
+                        {t("admin_cancel")}
                       </button>
                     )}
                   </div>
@@ -420,13 +460,13 @@ const AdminDashboard = () => {
                           onClick={() => setEditingPlan(plan)}
                           className="rounded bg-gray-100/10 hover:bg-gray-100/20 border border-gray-500/20 text-gray-300 px-2 py-1 text-xs font-bold"
                         >
-                          Edit
+                          {t("admin_edit")}
                         </button>
                         <button
                           onClick={() => deleteSubscriptionPlan(plan.id)}
                           className="rounded bg-red-950/60 hover:bg-red-900 border border-red-500/20 text-red-400 px-2 py-1 text-xs font-bold"
                         >
-                          Delete
+                          {t("admin_delete")}
                         </button>
                       </div>
                     </div>
@@ -450,14 +490,14 @@ const AdminDashboard = () => {
               {/* ADD/EDIT COACH FORM */}
               <div className="rounded-md border border-gray-100 p-6 bg-primary-100">
                 <h3 className="text-lg font-bold text-white mb-4">
-                  {editingCoach ? `Edit Coach: ${editingCoach.name}` : "Add New Coach"}
+                  {editingCoach ? `${t("admin_edit_coach")}${editingCoach.name}` : t("admin_add_coach")}
                 </h3>
                 <form
                   onSubmit={editingCoach ? handleSaveCoachEdit : handleAddCoach}
                   className="grid gap-4 md:grid-cols-3"
                 >
                   <label className="flex flex-col gap-1 text-xs font-bold text-gray-300">
-                    Full Name
+                    {t("admin_coach_name")}
                     <input
                       type="text"
                       value={editingCoach ? editingCoach.name : coachName}
@@ -472,7 +512,7 @@ const AdminDashboard = () => {
                     />
                   </label>
                   <label className="flex flex-col gap-1 text-xs font-bold text-gray-300">
-                    Specialization
+                    {t("admin_coach_spec")}
                     <input
                       type="text"
                       value={editingCoach ? editingCoach.specialization : coachSpec}
@@ -487,7 +527,7 @@ const AdminDashboard = () => {
                     />
                   </label>
                   <label className="flex flex-col gap-1 text-xs font-bold text-gray-300 md:col-span-3">
-                    Biography
+                    {t("admin_coach_bio")}
                     <textarea
                       rows={3}
                       value={editingCoach ? editingCoach.bio : coachBio}
@@ -506,7 +546,7 @@ const AdminDashboard = () => {
                       type="submit"
                       className="rounded bg-secondary-500 hover:bg-primary-500 text-white font-bold px-6 py-2 text-sm"
                     >
-                      {editingCoach ? "Save Changes" : "Create Coach"}
+                      {editingCoach ? t("admin_save") : t("admin_add_coach_btn")}
                     </button>
                     {editingCoach && (
                       <button
@@ -514,7 +554,7 @@ const AdminDashboard = () => {
                         onClick={() => setEditingCoach(null)}
                         className="rounded bg-gray-100/10 hover:bg-gray-150 text-gray-300 font-bold px-6 py-2 text-sm"
                       >
-                        Cancel
+                        {t("admin_cancel")}
                       </button>
                     )}
                   </div>
@@ -539,13 +579,13 @@ const AdminDashboard = () => {
                           onClick={() => setEditingCoach(c)}
                           className="rounded bg-gray-100/10 hover:bg-gray-100/20 border border-gray-500/20 text-gray-300 font-bold px-3 py-1 text-xs"
                         >
-                          Edit
+                          {t("admin_edit")}
                         </button>
                         <button
                           onClick={() => deleteCoach(c.id)}
                           className="rounded bg-red-950/60 hover:bg-red-900 border border-red-500/20 text-red-400 font-bold px-3 py-1 text-xs"
                         >
-                          Delete
+                          {t("admin_delete")}
                         </button>
                       </div>
                     </div>
@@ -561,14 +601,14 @@ const AdminDashboard = () => {
               {/* ADD/EDIT EQUIPMENT FORM */}
               <div className="rounded-md border border-gray-100 p-6 bg-primary-100">
                 <h3 className="text-lg font-bold text-white mb-4">
-                  {editingEq ? `Edit Equipment: ${editingEq.name}` : "Add Gym Equipment"}
+                  {editingEq ? `${t("admin_edit_equipment")}${editingEq.name}` : t("admin_add_equipment")}
                 </h3>
                 <form
                   onSubmit={editingEq ? handleSaveEqEdit : handleAddEquipment}
                   className="grid gap-4 md:grid-cols-4"
                 >
                   <label className="flex flex-col gap-1 text-xs font-bold text-gray-300">
-                    Equipment Name
+                    {t("admin_eq_name")}
                     <input
                       type="text"
                       value={editingEq ? editingEq.name : eqName}
@@ -583,7 +623,7 @@ const AdminDashboard = () => {
                     />
                   </label>
                   <label className="flex flex-col gap-1 text-xs font-bold text-gray-300">
-                    Type
+                    {t("admin_eq_type")}
                     <select
                       value={editingEq ? editingEq.type : eqType}
                       onChange={(e) =>
@@ -600,7 +640,7 @@ const AdminDashboard = () => {
                     </select>
                   </label>
                   <label className="flex flex-col gap-1 text-xs font-bold text-gray-300">
-                    Quantity
+                    {t("admin_eq_qty")}
                     <input
                       type="number"
                       min={1}
@@ -615,7 +655,7 @@ const AdminDashboard = () => {
                     />
                   </label>
                   <label className="flex flex-col gap-1 text-xs font-bold text-gray-300">
-                    Status
+                    {t("admin_eq_status")}
                     <select
                       value={editingEq ? editingEq.status : eqStatus}
                       onChange={(e) =>
@@ -635,7 +675,7 @@ const AdminDashboard = () => {
                       type="submit"
                       className="rounded bg-secondary-500 hover:bg-primary-500 text-white font-bold px-6 py-2 text-sm"
                     >
-                      {editingEq ? "Save Changes" : "Create Item"}
+                      {editingEq ? t("admin_save") : t("admin_add_eq_btn")}
                     </button>
                     {editingEq && (
                       <button
@@ -643,7 +683,7 @@ const AdminDashboard = () => {
                         onClick={() => setEditingEq(null)}
                         className="rounded bg-gray-100/10 hover:bg-gray-150 text-gray-300 font-bold px-6 py-2 text-sm"
                       >
-                        Cancel
+                        {t("admin_cancel")}
                       </button>
                     )}
                   </div>
@@ -653,15 +693,15 @@ const AdminDashboard = () => {
               {/* EQUIPMENT TABLE */}
               <div>
                 <h3 className="text-xl font-bold text-white mb-4">Equipment List</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
+                <div className="max-w-full overflow-x-auto">
+                  <table className="min-w-[720px] text-left border-collapse">
                     <thead>
                       <tr className="border-b border-gray-100 text-sm font-bold text-gray-300 bg-primary-100">
-                        <th className="py-3 px-4">Name</th>
-                        <th className="py-3 px-4">Category</th>
-                        <th className="py-3 px-4">Quantity</th>
-                        <th className="py-3 px-4">Status</th>
-                        <th className="py-3 px-4">Actions</th>
+                        <th className="py-3 px-4">{t("admin_col_name")}</th>
+                        <th className="py-3 px-4">{t("admin_col_tier")}</th>
+                        <th className="py-3 px-4">{t("admin_eq_qty")}</th>
+                        <th className="py-3 px-4">{t("admin_eq_status")}</th>
+                        <th className="py-3 px-4">{t("admin_col_actions")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -686,13 +726,13 @@ const AdminDashboard = () => {
                               onClick={() => setEditingEq(item)}
                               className="rounded bg-gray-100/10 hover:bg-gray-100/20 border border-gray-500/20 text-gray-300 px-2 py-1 text-xs font-bold"
                             >
-                              Edit
+                              {t("admin_edit")}
                             </button>
                             <button
                               onClick={() => deleteEquipment(item.id)}
                               className="rounded bg-red-950/60 hover:bg-red-900 border border-red-500/20 text-red-400 px-2 py-1 text-xs font-bold"
                             >
-                              Delete
+                              {t("admin_delete")}
                             </button>
                           </td>
                         </tr>
@@ -704,6 +744,96 @@ const AdminDashboard = () => {
             </div>
           )}
 
+          {/* INBOX TAB */}
+          {activeTab === "inbox" && (
+            <div>
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-bold text-primary-300 uppercase tracking-wider">Contact Inbox</p>
+                  <h2 className="mt-1 text-2xl font-bold text-white">
+                    Messages
+                    {unreadCount > 0 && (
+                      <span className="ml-3 inline-flex items-center rounded-full bg-primary-500/20 border border-primary-500/40 px-3 py-0.5 text-sm font-bold text-primary-300">
+                        {unreadCount} unread
+                      </span>
+                    )}
+                  </h2>
+                </div>
+              </div>
+
+              {messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center gap-3 rounded-md border border-gray-100 bg-primary-100 py-20 text-center">
+                  <svg className="h-10 w-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25H4.5a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5H4.5a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                  </svg>
+                  <p className="text-gray-400 font-semibold">No messages yet.</p>
+                  <p className="text-sm text-gray-500">Messages submitted via the Contact form will appear here.</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {messages.map((msg) => (
+                    <article
+                      key={msg.id}
+                      className={`rounded-md border p-5 transition duration-200 ${
+                        msg.read
+                          ? "border-gray-100 bg-primary-100"
+                          : "border-primary-500/40 bg-primary-100 shadow-[0_0_0_1px_rgba(255,0,0,0.1)]"
+                      }`}
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          {!msg.read && (
+                            <span className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-primary-500" />
+                          )}
+                          <div>
+                            <p className="font-bold text-white">{msg.name}</p>
+                            <p className="text-sm text-gray-400">{msg.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">
+                            {new Date(msg.receivedAt).toLocaleString("fr-DZ", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                          <button
+                            onClick={() => markMessageRead(msg.id, !msg.read)}
+                            className="rounded bg-gray-100/10 hover:bg-gray-100/20 border border-gray-500/20 text-gray-300 px-2 py-1 text-xs font-bold"
+                          >
+                            {msg.read ? t("admin_tab_inbox") : t("admin_mark_read")}
+                          </button>
+                          <button
+                            onClick={() => deleteMessage(msg.id)}
+                            className="rounded bg-red-950/60 hover:bg-red-900 border border-red-500/30 text-red-400 px-2 py-1 text-xs font-bold"
+                          >
+                            {t("admin_delete")}
+                          </button>
+                        </div>
+                      </div>
+                      <p className="mt-4 rounded-md bg-gray-20 px-4 py-3 text-sm leading-relaxed text-gray-300">
+                        {msg.message}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* MANAGE CLASSES TAB */}
+          {activeTab === "classes" && (
+            <ClassManagerPanel
+              gymClasses={gymClasses}
+              addGymClass={addGymClass}
+              editGymClass={editGymClass}
+              deleteGymClass={deleteGymClass}
+            />
+          )}
+
         </section>
       </div>
     </main>
@@ -711,3 +841,202 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+
+/* ── Class Manager Panel ─────────────────────────────────────── */
+type ClassManagerProps = {
+  gymClasses: GymClass[];
+  addGymClass: (name: string, description: string, image: string) => void;
+  editGymClass: (id: string, name: string, description: string, image: string) => void;
+  deleteGymClass: (id: string) => void;
+};
+
+const ClassManagerPanel = ({
+  gymClasses,
+  addGymClass,
+  editGymClass,
+  deleteGymClass,
+}: ClassManagerProps) => {
+  const { t } = useLanguage();
+  const [editingClass, setEditingClass] = useState<GymClass | null>(null);
+  const [className, setClassName] = useState("");
+  const [classDesc, setClassDesc] = useState("");
+  const [classImage, setClassImage] = useState("");
+  const [previewUrl, setPreviewUrl] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      setClassImage(result);
+      setPreviewUrl(result);
+      if (editingClass) setEditingClass({ ...editingClass, image: result });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const resetForm = () => {
+    setEditingClass(null);
+    setClassName("");
+    setClassDesc("");
+    setClassImage("");
+    setPreviewUrl("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const startEdit = (c: GymClass) => {
+    setEditingClass(c);
+    setClassName(c.name);
+    setClassDesc(c.description);
+    setClassImage(c.image);
+    setPreviewUrl(c.image);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const img = editingClass ? editingClass.image : classImage;
+    if (!className || !classDesc || !img) return;
+    if (editingClass) {
+      editGymClass(editingClass.id, editingClass.name === className ? className : className, classDesc, img);
+    } else {
+      addGymClass(className, classDesc, img);
+    }
+    resetForm();
+  };
+
+  const currentPreview = editingClass ? editingClass.image : previewUrl;
+
+  return (
+    <div className="flex flex-col gap-10">
+      {/* FORM */}
+      <div className="rounded-md border border-gray-100 bg-primary-100 p-6">
+        <h3 className="mb-4 text-lg font-bold text-white">
+          {editingClass ? `${t("admin_edit_class")}${editingClass.name}` : t("admin_add_class")}
+        </h3>
+        <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
+          {/* IMAGE UPLOAD */}
+          <div className="flex flex-col gap-3 md:row-span-3">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-md border border-gray-100 bg-gray-20">
+              {currentPreview ? (
+                <img
+                  src={currentPreview}
+                  alt="Class preview"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-gray-500">
+                  <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 19.5h16.5M13.5 3.75h.008v.008H13.5V3.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                  </svg>
+                  <p className="text-sm">No image selected</p>
+                </div>
+              )}
+            </div>
+            <label className="cursor-pointer rounded-md bg-secondary-500 px-4 py-2 text-center text-sm font-bold text-white transition duration-300 hover:bg-primary-500">
+              {currentPreview ? "Change Image" : "Upload Image"}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageChange}
+              />
+            </label>
+          </div>
+
+          {/* NAME + DESC */}
+          <label className="flex flex-col gap-1 text-xs font-bold text-gray-300">
+            {t("admin_class_name")}
+            <input
+              type="text"
+              value={className}
+              onChange={(e) => setClassName(e.target.value)}
+              className="rounded border border-gray-100 bg-gray-50 text-white px-3 py-2 font-normal text-sm outline-none focus:border-primary-300"
+              placeholder="e.g. Cardio Classes"
+              required
+            />
+          </label>
+
+          <label className="flex flex-col gap-1 text-xs font-bold text-gray-300 md:col-start-2">
+            {t("admin_class_desc")}
+            <textarea
+              rows={5}
+              value={classDesc}
+              onChange={(e) => setClassDesc(e.target.value)}
+              className="rounded border border-gray-100 bg-gray-50 text-white px-3 py-2 font-normal text-sm outline-none focus:border-primary-300"
+              placeholder="Short description shown on the card overlay…"
+              required
+            />
+          </label>
+
+          <div className="flex gap-3 md:col-start-2">
+            <button
+              type="submit"
+              className="rounded bg-secondary-500 hover:bg-primary-500 text-white font-bold px-6 py-2 text-sm"
+            >
+              {editingClass ? t("admin_save") : t("admin_add_class_btn")}
+            </button>
+            {editingClass && (
+              <button
+                type="button"
+                onClick={resetForm}
+                className="rounded bg-gray-100/10 hover:bg-gray-100/20 text-gray-300 font-bold px-6 py-2 text-sm"
+              >
+                {t("admin_cancel")}
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+
+      {/* CLASS GRID */}
+      <div>
+        <h3 className="mb-4 text-xl font-bold text-white">
+          Current Classes ({gymClasses.length})
+        </h3>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {gymClasses.map((c) => (
+            <article
+              key={c.id}
+              className={`overflow-hidden rounded-md border bg-primary-100 transition duration-200 ${
+                editingClass?.id === c.id
+                  ? "border-secondary-500"
+                  : "border-gray-100"
+              }`}
+            >
+              <div className="aspect-[4/3] overflow-hidden">
+                <img
+                  src={c.image}
+                  alt={c.name}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div className="p-4">
+                <p className="font-montserrat text-sm font-bold uppercase tracking-wide text-primary-300">
+                  {c.name}
+                </p>
+                <p className="mt-1 line-clamp-2 text-xs text-gray-400">{c.description}</p>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => startEdit(c)}
+                    className="rounded bg-gray-100/10 hover:bg-gray-100/20 border border-gray-500/20 text-gray-300 px-3 py-1 text-xs font-bold"
+                  >
+                    {t("admin_edit")}
+                  </button>
+                  <button
+                    onClick={() => deleteGymClass(c.id)}
+                    className="rounded bg-red-950/60 hover:bg-red-900 border border-red-500/30 text-red-400 px-3 py-1 text-xs font-bold"
+                  >
+                    {t("admin_delete")}
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};

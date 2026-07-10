@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import type { Location } from "react-router-dom";
 import Logo from "@/assets/Logo.png";
 import { useAuth } from "@/auth/AuthContext";
+import { useLanguage } from "@/shared/LanguageContext";
 
 type LocationState = {
   from?: Location;
@@ -12,6 +13,7 @@ const Login = () => {
   const { isAuthenticated, login, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
   const locationState = location.state as LocationState | null;
   const redirectTo = locationState?.from?.pathname ?? "/profile";
 
@@ -28,12 +30,12 @@ const Login = () => {
     setError("");
 
     if (!email || !password) {
-      setError("Email and password are required.");
+      setError(t("auth_error_required"));
       return;
     }
 
     if (!login(email, password)) {
-      setError("Use demo@gym.com / password or admin@gym.com / adminpassword.");
+      setError(t("auth_error_login"));
       return;
     }
 
@@ -52,14 +54,14 @@ const Login = () => {
         </Link>
 
         <section className="rounded-md border-2 border-gray-100 bg-gray-50 px-8 py-10">
-          <h1 className="font-montserrat text-4xl font-bold uppercase tracking-wide">Sign in</h1>
+          <h1 className="font-montserrat text-4xl font-bold uppercase tracking-wide">{t("auth_welcome_member")}</h1>
           <p className="mt-3 text-sm uppercase tracking-wide text-gray-500">
-            Use the member or admin demo account to unlock the prototype.
+            {t("auth_login_desc")}
           </p>
 
           <form className="mt-8 flex flex-col gap-5" onSubmit={handleSubmit}>
             <label className="flex flex-col gap-2 text-sm font-bold">
-              Email
+              {t("auth_email")}
               <input
                 className="rounded-lg bg-primary-100 px-5 py-3 font-normal text-white outline-primary-500"
                 type="email"
@@ -69,7 +71,7 @@ const Login = () => {
             </label>
 
             <label className="flex flex-col gap-2 text-sm font-bold">
-              Password
+              {t("auth_password")}
               <input
                 className="rounded-lg bg-primary-100 px-5 py-3 font-normal text-white outline-primary-500"
                 type="password"
@@ -84,7 +86,7 @@ const Login = () => {
               className="rounded-md bg-secondary-500 px-10 py-3 font-bold uppercase tracking-wide text-white transition duration-300 hover:bg-primary-500"
               type="submit"
             >
-              Sign In
+              {t("auth_signin_btn")}
             </button>
           </form>
 
@@ -95,9 +97,9 @@ const Login = () => {
             Admin demo: admin@gym.com / admin123
           </p>
           <p className="mt-6 text-sm">
-            New lifter?{" "}
+            {t("auth_no_account")}{" "}
             <Link className="font-bold text-primary-500 underline" to="/register">
-              Create an account
+              {t("auth_create_link")}
             </Link>
           </p>
         </section>

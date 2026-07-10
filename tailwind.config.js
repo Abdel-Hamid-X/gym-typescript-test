@@ -4,15 +4,18 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        "gray-20": "#121212",
-        "gray-50": "#1A1A1A",
-        "gray-100": "#2A2A2A",
-        "gray-500": "#B8B8B8",
-        "primary-100": "#1F1F1F",
-        "primary-300": "#00E5FF",
-        "primary-500": "#E50914",
-        "secondary-400": "#FF8A00",
-        "secondary-500": "#FF5A00",
+        white: "var(--color-text-strong)",
+        "gray-20": "var(--color-bg)",
+        "gray-50": "var(--color-surface)",
+        "gray-100": "var(--color-border)",
+        "gray-300": "var(--color-text-soft)",
+        "gray-400": "var(--color-text-muted)",
+        "gray-500": "var(--color-text-muted)",
+        "primary-100": "var(--color-panel)",
+        "primary-300": "var(--color-accent-cyan)",
+        "primary-500": "var(--color-accent-red)",
+        "secondary-400": "var(--color-accent-orange-soft)",
+        "secondary-500": "var(--color-accent-orange)",
       },
       backgroundImage: (theme) => ({
         "gradient-yellowred":

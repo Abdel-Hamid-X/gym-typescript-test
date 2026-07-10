@@ -1,0 +1,407 @@
+import React, { createContext, useContext, useState, useEffect } from "react";
+
+export type LanguageType = "en" | "fr";
+
+type LanguageContextValue = {
+  language: LanguageType;
+  setLanguage: (lang: LanguageType) => void;
+  t: (key: keyof typeof translations.en) => string;
+};
+
+const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
+
+export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
+  const [language, setLanguageState] = useState<LanguageType>(() => {
+    const saved = localStorage.getItem("evogym_language") as LanguageType;
+    return saved === "fr" || saved === "en" ? saved : "en";
+  });
+
+  const setLanguage = (lang: LanguageType) => {
+    setLanguageState(lang);
+    localStorage.setItem("evogym_language", lang);
+  };
+
+  const t = (key: keyof typeof translations.en): string => {
+    const dict = translations[language] || translations.en;
+    return dict[key] || translations.en[key] || String(key);
+  };
+
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+
+export const useLanguage = () => {
+  const context = useContext(LanguageContext);
+  if (!context) {
+    throw new Error("useLanguage must be used within a LanguageProvider");
+  }
+  return context;
+};
+
+export const translations = {
+  en: {
+    // Nav links
+    nav_home: "Home",
+    nav_benefits: "Benefits",
+    nav_classes: "Our Classes",
+    nav_contact: "Contact Us",
+    nav_signin: "Sign In",
+    nav_become_member: "Become a member",
+    nav_subscription: "Subscription",
+    nav_logout: "Logout",
+    nav_admin: "Admin",
+    nav_profile: "Profile",
+
+    // Home
+    home_desc: "Built for heavy training, explosive conditioning, and disciplined performance. Step into elite coaching, iron-ready studios, and a program designed to push your limits.",
+    home_join_now: "Join Now",
+    home_learn_more: "Learn More",
+
+    // Benefits
+    benefits_title_1: "OUR FEATURES",
+    benefits_title_2: "BUILT FOR PEOPLE CHASING ",
+    benefits_title_span: "STRENGTH & RESULTS",
+    benefits_desc_1: "Built for people who train with purpose. Heavy equipment, ruthless conditioning, expert coaching, and classes that turn effort into measurable strength.",
+    benefits_desc_2: "Train inside an industrial performance space built for serious lifting, high-output circuits, and no-excuse consistency. Every session is structured to sharpen strength, stamina, and control.",
+    benefits_desc_3: "From barbell work to conditioning blocks, the goal is simple: move heavier, recover faster, and leave stronger than you came in.",
+    benefits_item_1_title: "State of the Art Facilities",
+    benefits_item_1_desc: "Equipped with competition-grade barbells, heavy-duty racks, turf paths, and custom conditioning rigs.",
+    benefits_item_2_title: "100's of Diverse Classes",
+    benefits_item_2_desc: "From high-intensity conditioning circuits to core work, mobility, and strength-focused coaching routines.",
+    benefits_item_3_title: "Expert and Certified Trainers",
+    benefits_item_3_desc: "Professional coaches focused on mechanics, safety, progression, and driving you past your plateau.",
+
+    // Our Classes
+    classes_title: "OUR CLASSES",
+    classes_desc: "Pick your lane: strength, conditioning, combat-inspired circuits, mobility, and performance training built for people who want results they can measure.",
+
+    // Contact Us
+    contact_join: "JOIN NOW",
+    contact_shape: " TO GET IN SHAPE",
+    contact_desc: "Claim your first performance session. Tell us your goal, your current level, and how hard you are ready to train.",
+    contact_placeholder_name: "NAME",
+    contact_placeholder_email: "EMAIL",
+    contact_placeholder_message: "MESSAGE",
+    contact_err_required: "This field is required.",
+    contact_err_email: "Invalid email address.",
+    contact_err_max_char: "Max length is 100 characters.",
+    contact_err_max_msg: "Max length is 2000 characters.",
+    contact_submit: "SUBMIT",
+    contact_toast: "Message sent! We'll get back to you shortly.",
+
+    // Authentication (Login/Register)
+    auth_welcome_admin: "Welcome back, Admin",
+    auth_welcome_member: "Become a member",
+    auth_create_desc: "Create a local prototype account and step into the member area.",
+    auth_login_desc: "Sign in to access your dashboard, plans, and coaches.",
+    auth_name: "Name",
+    auth_email: "Email",
+    auth_password: "Password",
+    auth_create_btn: "Create Account",
+    auth_signin_btn: "Sign In",
+    auth_already: "Already have access? ",
+    auth_no_account: "New to Evogym? ",
+    auth_sign_in_link: "Sign in",
+    auth_create_link: "Become a member",
+    auth_error_existing: "An account with this email address already exists.",
+    auth_error_required: "Name, email, and password are required.",
+    auth_error_login: "Invalid email or password.",
+
+    // Member Profile & Dashboard
+    profile_welcome: "Welcome back, ",
+    profile_title: "Member Dashboard",
+    profile_email: "Email Address",
+    profile_tier: "Membership Tier",
+    profile_status_none: "No Active Plan",
+    profile_status_plan: " Plan",
+    profile_time_left: "Time Left on Plan",
+    profile_no_timer: "No active subscription",
+    profile_expired: "Subscription Expired",
+    profile_settings_title: "Profile Settings",
+    profile_phone: "Phone Number",
+    profile_goals: "Personal Goals",
+    profile_phone_empty: "Not added yet",
+    profile_goals_empty: "No goals added yet",
+    profile_save_btn: "Save Changes",
+    profile_updated_toast: "Profile updated.",
+    profile_avatar_label: "Change Avatar",
+    profile_avatar_none: "Upload Image",
+    profile_tab_dash: "Dashboard & Subscription",
+    profile_tab_settings: "Profile Settings",
+    profile_tab_coaches: "Coaches",
+    profile_tab_equipment: "Equipment",
+    profile_display_name: "Display Name",
+    profile_time_remaining: "Time Remaining",
+    profile_edit_heading: "Edit Your Member Profile",
+    profile_upload_avatar: "Upload Avatar",
+    profile_save_profile: "Save Profile",
+    profile_explore_classes: "Explore Gym Classes",
+    profile_contact_support: "Contact Support",
+    profile_coaches_heading: "Our Expert Coaches",
+    profile_equipment_heading: "Gym Equipment & Facilities",
+    profile_equip_name: "Name",
+    profile_equip_category: "Category",
+    profile_equip_qty: "Quantity Available",
+    profile_equip_status: "Status",
+
+    // Plan Selection
+    plans_title: "CHOOSE YOUR TIER",
+    plans_desc: "Select the subscription level that matches your training schedule. No hidden fees.",
+    plans_select: "Select Plan",
+    plans_current: "Current Plan",
+    plans_expires: "Expires on: ",
+    plans_profile: "Profile",
+    plans_logout: "Logout",
+    plans_subtitle: "Subscription Plans",
+    plans_heading: "Choose Your Access",
+    plans_proto: "Prototype payment flow: selecting a plan updates your member profile with a 30-day subscription.",
+    plans_current_plan: "Current Plan",
+    plans_available: "Available Plan",
+    plans_active: "Active Plan",
+
+    // Admin Dashboard
+    admin_portal: "Admin Portal",
+    admin_logout: "Logout",
+    admin_tab_members: "Manage Members",
+    admin_tab_coaches: "Manage Coaches",
+    admin_tab_subscriptions: "Manage Subscriptions",
+    admin_tab_equipment: "Manage Equipment",
+    admin_tab_inbox: "Inbox",
+    admin_tab_classes: "Manage Classes",
+    admin_members_heading: "Registered Gym Members",
+    admin_col_name: "Name",
+    admin_col_email: "Email",
+    admin_col_tier: "Tier",
+    admin_col_expires: "Subscription Expires",
+    admin_col_actions: "Actions",
+    admin_no_plan: "No active plan",
+    admin_expired: " (Expired)",
+    admin_delete: "Delete",
+    admin_save: "Save Changes",
+    admin_cancel: "Cancel",
+    admin_edit: "Edit",
+    admin_add_plan: "Add Subscription Plan",
+    admin_edit_plan: "Edit Plan: ",
+    admin_plan_name: "Plan Name",
+    admin_plan_price: "Monthly Price",
+    admin_description: "Description",
+    admin_features: "Features (one per line)",
+    admin_add_btn: "Add Plan",
+    admin_update_btn: "Update Plan",
+    admin_existing_plans: "Existing Plans",
+    admin_coaches_heading: "Coaches",
+    admin_add_coach: "Add Coach",
+    admin_edit_coach: "Edit Coach: ",
+    admin_coach_name: "Coach Name",
+    admin_coach_spec: "Specialization",
+    admin_coach_bio: "Bio",
+    admin_add_coach_btn: "Add Coach",
+    admin_update_coach_btn: "Update Coach",
+    admin_equipment_heading: "Equipment",
+    admin_add_equipment: "Add Equipment",
+    admin_edit_equipment: "Edit Equipment: ",
+    admin_eq_name: "Equipment Name",
+    admin_eq_type: "Type",
+    admin_eq_qty: "Quantity",
+    admin_eq_status: "Status",
+    admin_add_eq_btn: "Add Equipment",
+    admin_update_eq_btn: "Update Equipment",
+    admin_inbox_heading: "Member Inbox",
+    admin_col_from: "From",
+    admin_col_message: "Message",
+    admin_col_read: "Read",
+    admin_mark_read: "Mark Read",
+    admin_classes_heading: "Gym Classes",
+    admin_add_class: "Add Class",
+    admin_edit_class: "Edit Class: ",
+    admin_class_name: "Class Name",
+    admin_class_desc: "Description",
+    admin_class_img: "Image URL",
+    admin_add_class_btn: "Add Class",
+    admin_update_class_btn: "Update Class",
+  },
+  fr: {
+    // Nav links
+    nav_home: "Accueil",
+    nav_benefits: "Avantages",
+    nav_classes: "Nos Classes",
+    nav_contact: "Contactez-nous",
+    nav_signin: "Connexion",
+    nav_become_member: "Devenir membre",
+    nav_subscription: "Abonnement",
+    nav_logout: "Déconnexion",
+    nav_admin: "Admin",
+    nav_profile: "Profil",
+
+    // Home
+    home_desc: "Conçu pour un entraînement intensif, un conditionnement explosif et des performances disciplinées. Profitez d'un coaching d'élite, de studios prêts à l'emploi et d'un programme conçu pour repousser vos limites.",
+    home_join_now: "Rejoindre",
+    home_learn_more: "En savoir plus",
+
+    // Benefits
+    benefits_title_1: "NOS ATOUTS",
+    benefits_title_2: "CONÇU POUR CEUX QUI VEULENT DE LA ",
+    benefits_title_span: "FORCE & DES RÉSULTATS",
+    benefits_desc_1: "Construit pour les personnes qui s'entraînent avec un but précis. Équipement lourd, conditionnement sans merci, coaching d'experts et cours qui transforment l'effort en force mesurable.",
+    benefits_desc_2: "Entraînez-vous dans un espace de performance industriel conçu pour le levage lourd, les circuits intenses et la régularité sans excuse. Chaque séance est structurée pour renforcer la force, l'endurance et le contrôle.",
+    benefits_desc_3: "Du travail à la barre aux séances de conditionnement, l'objectif est simple : soulever plus lourd, récupérer plus vite et repartir plus fort qu'à votre arrivée.",
+    benefits_item_1_title: "Installations de Pointe",
+    benefits_item_1_desc: "Équipé de barres de niveau compétition, de racks ultra-robustes, de pistes synthétiques et de structures de conditionnement sur mesure.",
+    benefits_item_2_title: "Des Centaines de Cours Variés",
+    benefits_item_2_desc: "Des circuits de conditionnement haute intensité au travail de gainage, de mobilité et des programmes axés sur la force.",
+    benefits_item_3_title: "Entraîneurs Certifiés et Experts",
+    benefits_item_3_desc: "Coachs professionnels focalisés sur la mécanique, la sécurité, la progression et le dépassement de vos limites.",
+
+    // Our Classes
+    classes_title: "NOS CLASSES",
+    classes_desc: "Choisissez votre voie : force, conditionnement physique, circuits inspirés du combat, mobilité et entraînement de performance conçus pour ceux qui veulent des résultats mesurables.",
+
+    // Contact Us
+    contact_join: "REJOIGNEZ-NOUS",
+    contact_shape: " POUR RETROUVER LA FORME",
+    contact_desc: "Réservez votre première séance d'évaluation. Dites-nous vos objectifs, votre niveau actuel et l'intensité que vous êtes prêt à y consacrer.",
+    contact_placeholder_name: "NOM",
+    contact_placeholder_email: "EMAIL",
+    contact_placeholder_message: "MESSAGE",
+    contact_err_required: "Ce champ est obligatoire.",
+    contact_err_email: "Adresse email invalide.",
+    contact_err_max_char: "La longueur maximale est de 100 caractères.",
+    contact_err_max_msg: "La longueur maximale est de 2000 caractères.",
+    contact_submit: "ENVOYER",
+    contact_toast: "Message envoyé ! Nous vous répondrons dans les plus brefs délais.",
+
+    // Authentication (Login/Register)
+    auth_welcome_admin: "Content de vous revoir, Admin",
+    auth_welcome_member: "Devenir membre",
+    auth_create_desc: "Créez un compte prototype local et accédez à l'espace membre.",
+    auth_login_desc: "Connectez-vous pour accéder à votre tableau de bord, plans et entraîneurs.",
+    auth_name: "Nom",
+    auth_email: "Adresse email",
+    auth_password: "Mot de passe",
+    auth_create_btn: "Créer un compte",
+    auth_signin_btn: "Se connecter",
+    auth_already: "Vous avez déjà un compte ? ",
+    auth_no_account: "Nouveau chez Evogym ? ",
+    auth_sign_in_link: "Se connecter",
+    auth_create_link: "Devenir membre",
+    auth_error_existing: "Un compte avec cette adresse email existe déjà.",
+    auth_error_required: "Le nom, l'email et le mot de passe sont requis.",
+    auth_error_login: "Email ou mot de passe incorrect.",
+
+    // Member Profile & Dashboard
+    profile_welcome: "Content de vous revoir, ",
+    profile_title: "Tableau de Bord Membre",
+    profile_email: "Adresse email",
+    profile_tier: "Type d'abonnement",
+    profile_status_none: "Aucun abonnement actif",
+    profile_status_plan: " Plan",
+    profile_time_left: "Temps restant sur le plan",
+    profile_no_timer: "Aucun abonnement actif",
+    profile_expired: "Abonnement Expiré",
+    profile_settings_title: "Paramètres du Profil",
+    profile_phone: "Numéro de téléphone",
+    profile_goals: "Objectifs personnels",
+    profile_phone_empty: "Non renseigné",
+    profile_goals_empty: "Aucun objectif ajouté",
+    profile_save_btn: "Sauvegarder",
+    profile_updated_toast: "Profil mis à jour.",
+    profile_avatar_label: "Changer l'avatar",
+    profile_avatar_none: "Télécharger une image",
+    profile_tab_dash: "Tableau de Bord & Abonnement",
+    profile_tab_settings: "Paramètres de Profil",
+    profile_tab_coaches: "Entraîneurs",
+    profile_tab_equipment: "Équipement",
+    profile_display_name: "Nom d'affichage",
+    profile_time_remaining: "Temps restant",
+    profile_edit_heading: "Modifier votre profil membre",
+    profile_upload_avatar: "Télécharger un avatar",
+    profile_save_profile: "Sauvegarder le profil",
+    profile_explore_classes: "Explorer les cours",
+    profile_contact_support: "Contacter le support",
+    profile_coaches_heading: "Nos entraîneurs experts",
+    profile_equipment_heading: "Équipements & Installations",
+    profile_equip_name: "Nom",
+    profile_equip_category: "Catégorie",
+    profile_equip_qty: "Quantité disponible",
+    profile_equip_status: "Statut",
+
+    // Plan Selection
+    plans_title: "CHOISISSEZ VOTRE FORMULE",
+    plans_desc: "Sélectionnez le niveau d'abonnement correspondant à votre rythme d'entraînement. Sans frais cachés.",
+    plans_select: "Sélectionner ce plan",
+    plans_current: "Abonnement Actuel",
+    plans_expires: "Expire le : ",
+    plans_profile: "Profil",
+    plans_logout: "Déconnexion",
+    plans_subtitle: "Plans d'abonnement",
+    plans_heading: "Choisissez Votre Accès",
+    plans_proto: "Flux de paiement prototype : sélectionner un plan met à jour votre profil membre avec un abonnement de 30 jours.",
+    plans_current_plan: "Plan Actuel",
+    plans_available: "Plan Disponible",
+    plans_active: "Plan Actif",
+
+    // Admin Dashboard
+    admin_portal: "Portail Admin",
+    admin_logout: "Déconnexion",
+    admin_tab_members: "Membres",
+    admin_tab_coaches: "Entraîneurs",
+    admin_tab_subscriptions: "Abonnements",
+    admin_tab_equipment: "Équipements",
+    admin_tab_inbox: "Boîte de réception",
+    admin_tab_classes: "Cours",
+    admin_members_heading: "Membres inscrits",
+    admin_col_name: "Nom",
+    admin_col_email: "Email",
+    admin_col_tier: "Formule",
+    admin_col_expires: "Expiration abonnement",
+    admin_col_actions: "Actions",
+    admin_no_plan: "Aucun plan actif",
+    admin_expired: " (Expiré)",
+    admin_delete: "Supprimer",
+    admin_save: "Sauvegarder",
+    admin_cancel: "Annuler",
+    admin_edit: "Modifier",
+    admin_add_plan: "Ajouter un plan",
+    admin_edit_plan: "Modifier le plan : ",
+    admin_plan_name: "Nom du plan",
+    admin_plan_price: "Prix mensuel",
+    admin_description: "Description",
+    admin_features: "Fonctionnalités (une par ligne)",
+    admin_add_btn: "Ajouter le plan",
+    admin_update_btn: "Mettre à jour le plan",
+    admin_existing_plans: "Plans existants",
+    admin_coaches_heading: "Entraîneurs",
+    admin_add_coach: "Ajouter un entraîneurs",
+    admin_edit_coach: "Modifier l'entraîneurs : ",
+    admin_coach_name: "Nom de l'entraîneurs",
+    admin_coach_spec: "Spécialisation",
+    admin_coach_bio: "Biographie",
+    admin_add_coach_btn: "Ajouter l'entraîneurs",
+    admin_update_coach_btn: "Mettre à jour l'entraîneurs",
+    admin_equipment_heading: "Équipements",
+    admin_add_equipment: "Ajouter un équipement",
+    admin_edit_equipment: "Modifier l'équipement : ",
+    admin_eq_name: "Nom de l'équipement",
+    admin_eq_type: "Type",
+    admin_eq_qty: "Quantité",
+    admin_eq_status: "Statut",
+    admin_add_eq_btn: "Ajouter l'équipement",
+    admin_update_eq_btn: "Mettre à jour l'équipement",
+    admin_inbox_heading: "Boîte de réception membre",
+    admin_col_from: "De",
+    admin_col_message: "Message",
+    admin_col_read: "Lu",
+    admin_mark_read: "Marquer comme lu",
+    admin_classes_heading: "Cours de gym",
+    admin_add_class: "Ajouter un cours",
+    admin_edit_class: "Modifier le cours : ",
+    admin_class_name: "Nom du cours",
+    admin_class_desc: "Description",
+    admin_class_img: "URL de l'image",
+    admin_add_class_btn: "Ajouter le cours",
+    admin_update_class_btn: "Mettre à jour le cours",
+  }
+};

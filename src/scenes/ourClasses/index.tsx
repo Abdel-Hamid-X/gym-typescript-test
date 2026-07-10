@@ -1,54 +1,10 @@
 import { useRef, useCallback } from "react"
 import { SelectedPage } from "@/shared/types"
-import { ClassType } from "@/shared/types"
-import Weights from '@/assets/Weights.jpg'
-import image2 from '@/assets/image2.png'
-import image3 from '@/assets/image3.png'
-import image4 from '@/assets/image4.png'
-import image5 from '@/assets/image5.png'
-import image6 from '@/assets/image6.png'
 import { motion } from "framer-motion"
 import HText from "@/shared/HText"
 import Class from "./Class"
-
-const classes: Array<ClassType> = [
-    {
-        name: "Weight Training Classes",
-        description:
-            "Heavy compound lifts, progressive overload, and technical coaching for bigger numbers and stronger bodies.",
-        image: Weights,
-    },
-    {
-        name: "Yoga Classes",
-        description:
-            "Mobility and recovery sessions built to keep strong athletes moving, bracing, and lifting well.",
-        image: image2,
-    },
-    {
-        name: "Ab Core Classes",
-        description:
-            "Core strength, trunk stability, and loaded carries for better power transfer under pressure.",
-        image: image3,
-    },
-    {
-        name: "Adventure Classes",
-        description:
-            "High-output training blocks that combine endurance, agility, and grit.",
-        image: image4,
-    },
-    {
-        name: "Fitness Classes",
-        description:
-            "Full-body conditioning sessions for lean muscle, stamina, and relentless pace.",
-        image: image5,
-    },
-    {
-        name: "Training Classes",
-        description:
-            "Coach-led performance sessions focused on strength, speed, and repeatable discipline.",
-        image: image6,
-    },
-]
+import { useAuth } from "@/auth/AuthContext"
+import { useLanguage } from "@/shared/LanguageContext"
 
 const SCROLL_STEP = 380
 
@@ -57,6 +13,8 @@ type Props = {
 }
 
 const OurClasses = ({ setselectedPage }: Props) => {
+    const { gymClasses } = useAuth()
+    const { t } = useLanguage()
     const sliderRef = useRef<HTMLUListElement>(null)
 
     // --- mouse drag ---
@@ -90,7 +48,6 @@ const OurClasses = ({ setselectedPage }: Props) => {
     // --- scroll wheel → horizontal ---
     const onWheel = useCallback((e: React.WheelEvent<HTMLUListElement>) => {
         if (!sliderRef.current) return
-        // Only intercept vertical wheel when the slider is in view
         if (e.deltaY !== 0) {
             e.preventDefault()
             sliderRef.current.scrollLeft += e.deltaY
@@ -102,10 +59,16 @@ const OurClasses = ({ setselectedPage }: Props) => {
         if (!sliderRef.current) return
         if (e.key === "ArrowRight") {
             e.preventDefault()
-            sliderRef.current.scrollLeft += SCROLL_STEP
+            sliderRef.current.scrollTo({
+                left: sliderRef.current.scrollLeft + SCROLL_STEP,
+                behavior: "smooth"
+            })
         } else if (e.key === "ArrowLeft") {
             e.preventDefault()
-            sliderRef.current.scrollLeft -= SCROLL_STEP
+            sliderRef.current.scrollTo({
+                left: sliderRef.current.scrollLeft - SCROLL_STEP,
+                behavior: "smooth"
+            })
         }
     }, [])
 
@@ -127,11 +90,9 @@ const OurClasses = ({ setselectedPage }: Props) => {
                         visible: { opacity: 1, x: 0 },
                     }}>
                     <div className="md:h-3/5">
-                        <HText>OUR CLASSES</HText>
+                        <HText>{t("classes_title")}</HText>
                         <p className="py-5">
-                            Pick your lane: strength, conditioning, combat-inspired circuits,
-                            mobility, and performance training built for people who want results
-                            they can measure.
+                            {t("classes_desc")}
                         </p>
                     </div>
                 </motion.div>
@@ -152,7 +113,6 @@ const OurClasses = ({ setselectedPage }: Props) => {
                         className="flex gap-6 overflow-x-scroll px-[8.33%] pb-4
                             cursor-grab focus:outline-none
                             [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                        style={{ scrollBehavior: "smooth" }}
                         onPointerDown={onPointerDown}
                         onPointerMove={onPointerMove}
                         onPointerUp={stopDrag}
@@ -160,10 +120,9 @@ const OurClasses = ({ setselectedPage }: Props) => {
                         onWheel={onWheel}
                         onKeyDown={onKeyDown}
                     >
-                        {classes.map((item: ClassType, index) => (
+                        {gymClasses.map((item, index) => (
                             <li
-                                key={`${item.name}-${index}`}
-                                /* prevent drag from triggering link/image drag */
+                                key={`${item.id}-${index}`}
                                 onDragStart={(e) => e.preventDefault()}
                                 className="shrink-0 w-[320px] sm:w-[360px] md:w-[420px]"
                             >

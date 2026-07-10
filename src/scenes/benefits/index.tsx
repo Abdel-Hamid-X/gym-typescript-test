@@ -1,22 +1,12 @@
-import {
-    SelectedPage,
-} from "@/shared/types"
-import type {
-    BenefitType
-} from "@/shared/types"
-import {
-    AcademicCapIcon,
-    HomeModernIcon,
-    UserGroupIcon
-} from "@heroicons/react/24/solid"
-import {
-    motion,
-    stagger
-} from "framer-motion"
+import { SelectedPage } from "@/shared/types"
+import type { BenefitType } from "@/shared/types"
+import { AcademicCapIcon, HomeModernIcon, UserGroupIcon } from "@heroicons/react/24/solid"
+import { motion } from "framer-motion"
 import ActionButton from '@/shared/ActionButton';
 import BenefitsPage2 from "@/assets/BenefitsPage2.png"
 import HText from "@/shared/HText"
 import Benefit from "./Benefit"
+import { useLanguage } from "@/shared/LanguageContext";
 
 const Container = {
     hidden: {},
@@ -27,29 +17,31 @@ const Container = {
     }
 }
 
-const benefits: Array<BenefitType> = [
-    {
-        icon: <HomeModernIcon className="h-6 w-6" />,
-        title: "State of the Art Facilities",
-        description: "Industrial-grade racks, platforms, machines, and tools built for serious strength work."
-    },
-    {
-        icon: <UserGroupIcon className="h-6 w-6" />,
-        title: "100's of Diverse Classes",
-        description: "Strength, hypertrophy, HIIT, boxing, and conditioning sessions for every training level."
-    },
-    {
-        icon: <AcademicCapIcon className="h-6 w-6" />,
-        title: "Expert and Pro Trainers",
-        description: "Performance coaches who push technique, discipline, and measurable progression."
-    },
-]
-
 type Props = {
     setselectedPage: (value: SelectedPage) => void
 }
 
 const Benefits = ({ setselectedPage }: Props) => {
+    const { t } = useLanguage();
+
+    const translatedBenefits: Array<BenefitType> = [
+        {
+            icon: <HomeModernIcon className="h-6 w-6" />,
+            title: t("benefits_item_1_title"),
+            description: t("benefits_item_1_desc")
+        },
+        {
+            icon: <UserGroupIcon className="h-6 w-6" />,
+            title: t("benefits_item_2_title"),
+            description: t("benefits_item_2_desc")
+        },
+        {
+            icon: <AcademicCapIcon className="h-6 w-6" />,
+            title: t("benefits_item_3_title"),
+            description: t("benefits_item_3_desc")
+        },
+    ];
+
     return (
         <section
             id="benefits"
@@ -88,14 +80,12 @@ const Benefits = ({ setselectedPage }: Props) => {
                             x: 0
                         },
                     }}>
-                    <HText>MORE THAN JUST A GYM.</HText>
+                    <HText>{t("benefits_title_1")}</HText>
                     <p
                         className="
                                 my-5 
                                 text-sm">
-                        Built for people who train with purpose. Heavy equipment, ruthless
-                        conditioning, expert coaching, and classes that turn effort into
-                        measurable strength.
+                        {t("benefits_desc_1")}
                     </p>
                 </motion.div>
                 {/* BENEFITS */}
@@ -113,7 +103,7 @@ const Benefits = ({ setselectedPage }: Props) => {
                         amount: 0.5
                     }}
                     variants={Container}>
-                    {benefits.map((benefit: BenefitType) => (
+                    {translatedBenefits.map((benefit: BenefitType) => (
                         <Benefit
                             key={benefit.title}
                             icon={benefit.icon}
@@ -166,11 +156,11 @@ const Benefits = ({ setselectedPage }: Props) => {
                                         },
                                     }}>
                                     <HText>
-                                        BUILT FOR PEOPLE CHASING {" "}
+                                        {t("benefits_title_2")} {" "}
                                         <span
                                             className="
                                             text-primary-500">
-                                            POWER
+                                            {t("benefits_title_span")}
                                         </span>
                                     </HText>
                                 </motion.div>
@@ -200,14 +190,11 @@ const Benefits = ({ setselectedPage }: Props) => {
                             }}>
                             <p
                                 className="my-5">
-                                Train inside an industrial performance space built for serious
-                                lifting, high-output circuits, and no-excuse consistency. Every
-                                session is structured to sharpen strength, stamina, and control.
+                                {t("benefits_desc_2")}
                             </p>
                             <p
                                 className="mb-5">
-                                From barbell work to conditioning blocks, the goal is simple:
-                                move heavier, recover faster, and leave stronger than you came in.
+                                {t("benefits_desc_3")}
                             </p>
                         </motion.div>
                         {/* BUTTON */}
@@ -224,7 +211,7 @@ const Benefits = ({ setselectedPage }: Props) => {
                                 before:content-sparkles">
                                 <ActionButton
                                     setselectedPage={setselectedPage}>
-                                    Join Now
+                                    {t("home_join_now")}
                                 </ActionButton>
                             </div>
                         </div>

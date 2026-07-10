@@ -1,6 +1,6 @@
 import type { SelectedPage } from "@/shared/types";
-//import { select } from "framer-motion/client";
 import AnchorLink from "react-anchor-link-smooth-scroll"
+import { useLanguage } from "@/shared/LanguageContext";
 
 type Props = {
     page: string;
@@ -14,6 +14,16 @@ const Link = ({
     setselectedPage,
 }: Props) => {
     const lowerCasePage = page.toLowerCase().replace(/ /g, "") as SelectedPage;
+    const { t } = useLanguage();
+
+    const translatedPage = (() => {
+        if (lowerCasePage === "home") return t("nav_home");
+        if (lowerCasePage === "benefits") return t("nav_benefits");
+        if (lowerCasePage === "ourclasses") return t("nav_classes");
+        if (lowerCasePage === "contactus") return t("nav_contact");
+        return page;
+    })();
+
   return (
     <AnchorLink 
     className={`
@@ -22,7 +32,7 @@ const Link = ({
         `}
     href={`#${lowerCasePage}`}
     onClick={() => setselectedPage(lowerCasePage)}>
-      {page}
+      {translatedPage}
     </AnchorLink>
   )
 }

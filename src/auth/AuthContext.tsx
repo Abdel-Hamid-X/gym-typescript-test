@@ -11,10 +11,13 @@ import {
   SubscriptionPlan,
   Coach,
   Equipment,
+  ContactMessage,
+  GymClass,
   INITIAL_SUBSCRIPTION_PLANS,
   INITIAL_COACHES,
   INITIAL_EQUIPMENT,
 } from "@/shared/mockData";
+import { INITIAL_CLASSES } from "@/shared/initialClasses";
 
 type RegisterInput = {
   name: string;
@@ -28,9 +31,11 @@ type AuthContextValue = {
   subscriptionPlans: SubscriptionPlan[];
   coaches: Coach[];
   equipment: Equipment[];
+  gymClasses: GymClass[];
+  messages: ContactMessage[];
   isAuthenticated: boolean;
   login: (email: string, password: string) => boolean;
-  register: (input: RegisterInput) => void;
+  register: (input: RegisterInput) => boolean;
   logout: () => void;
   updateCurrentUserProfile: (profile: Pick<User, "name" | "phoneNumber" | "personalGoals" | "avatarUrl">) => void;
   subscribeCurrentUser: (planName: string) => void;
@@ -45,6 +50,12 @@ type AuthContextValue = {
   addEquipment: (name: string, type: Equipment["type"], quantity: number, status: Equipment["status"]) => void;
   editEquipment: (id: string, name: string, type: Equipment["type"], quantity: number, status: Equipment["status"]) => void;
   deleteEquipment: (id: string) => void;
+  addGymClass: (name: string, description: string, image: string) => void;
+  editGymClass: (id: string, name: string, description: string, image: string) => void;
+  deleteGymClass: (id: string) => void;
+  addMessage: (name: string, email: string, message: string) => void;
+  markMessageRead: (id: string, read: boolean) => void;
+  deleteMessage: (id: string) => void;
 };
 
 const AUTH_STORAGE_KEY = "evogym_mock_user";
@@ -52,6 +63,8 @@ const USERS_STORAGE_KEY = "evogym_mock_users";
 const SUBSCRIPTION_PLANS_STORAGE_KEY = "evogym_mock_subscription_plans";
 const COACHES_STORAGE_KEY = "evogym_mock_coaches";
 const EQUIPMENT_STORAGE_KEY = "evogym_mock_equipment";
+const GYM_CLASSES_STORAGE_KEY = "evogym_mock_gym_classes";
+const MESSAGES_STORAGE_KEY = "evogym_mock_messages";
 
 const DEMO_EMAIL = "demo@gym.com";
 const DEMO_PASSWORD = "password";
@@ -71,6 +84,8 @@ export const AuthProvider = ({ children }: Props) => {
   const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([]);
   const [coaches, setCoaches] = useState<Coach[]>([]);
   const [equipment, setEquipment] = useState<Equipment[]>([]);
+  const [gymClasses, setGymClasses] = useState<GymClass[]>([]);
+  const [messages, setMessages] = useState<ContactMessage[]>([]);
 
   useEffect(() => {
     // 1. Seed subscription plans
@@ -106,7 +121,17 @@ export const AuthProvider = ({ children }: Props) => {
     }
     setEquipment(finalEquipment);
 
-    // 4. Seed users (includes demo member & admin user)
+    // 4. Seed gym classes
+    const storedClasses = window.localStorage.getItem(GYM_CLASSES_STORAGE_KEY);
+    let finalClasses = INITIAL_CLASSES;
+    if (storedClasses) {
+      finalClasses = JSON.parse(storedClasses) as GymClass[];
+    } else {
+      window.localStorage.setItem(GYM_CLASSES_STORAGE_KEY, JSON.stringify(INITIAL_CLASSES));
+    }
+    setGymClasses(finalClasses);
+
+    // 5. Seed users (includes demo member & admin user)
     const storedUsers = window.localStorage.getItem(USERS_STORAGE_KEY);
     let finalUsers: User[] = [];
     if (storedUsers) {
@@ -135,7 +160,15 @@ export const AuthProvider = ({ children }: Props) => {
     }
     setUsers(finalUsers);
 
-    // 5. Resume active user session
+    // 5. Seed messages inbox
+    const storedMessages = window.localStorage.getItem(MESSAGES_STORAGE_KEY);
+    if (storedMessages) {
+      setMessages(JSON.parse(storedMessages) as ContactMessage[]);
+    } else {
+      window.localStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify([]));
+    }
+
+    // 6. Resume active user session
     const storedUser = window.localStorage.getItem(AUTH_STORAGE_KEY);
     if (storedUser) {
       setUser(JSON.parse(storedUser) as User);
@@ -181,7 +214,7 @@ export const AuthProvider = ({ children }: Props) => {
   const register = ({ name, email }: RegisterInput) => {
     const normalizedEmail = email.trim().toLowerCase();
     const exists = users.some((u) => u.email.toLowerCase() === normalizedEmail);
-    if (exists) return;
+    if (exists) return false;
 
     const newUser: User = {
       name,
@@ -198,6 +231,7 @@ export const AuthProvider = ({ children }: Props) => {
     setUsers(nextUsers);
     window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(nextUsers));
     saveUser(newUser);
+    return true;
   };
 
   const logout = () => {
@@ -372,6 +406,53 @@ export const AuthProvider = ({ children }: Props) => {
     window.localStorage.setItem(EQUIPMENT_STORAGE_KEY, JSON.stringify(nextEq));
   };
 
+  // Gym Classes CRUD
+  const addGymClass = (name: string, description: string, image: string) => {
+    const newClass: GymClass = { id: `class-${Date.now()}`, name, description, image };
+    const next = [...gymClasses, newClass];
+    setGymClasses(next);
+    window.localStorage.setItem(GYM_CLASSES_STORAGE_KEY, JSON.stringify(next));
+  };
+
+  const editGymClass = (id: string, name: string, description: string, image: string) => {
+    const next = gymClasses.map((c) => (c.id === id ? { ...c, name, description, image } : c));
+    setGymClasses(next);
+    window.localStorage.setItem(GYM_CLASSES_STORAGE_KEY, JSON.stringify(next));
+  };
+
+  const deleteGymClass = (id: string) => {
+    const next = gymClasses.filter((c) => c.id !== id);
+    setGymClasses(next);
+    window.localStorage.setItem(GYM_CLASSES_STORAGE_KEY, JSON.stringify(next));
+  };
+
+  // Messages (inbox) operations
+  const addMessage = (name: string, email: string, message: string) => {
+    const newMsg: ContactMessage = {
+      id: `msg-${Date.now()}`,
+      name,
+      email,
+      message,
+      receivedAt: new Date().toISOString(),
+      read: false,
+    };
+    const nextMessages = [newMsg, ...messages];
+    setMessages(nextMessages);
+    window.localStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(nextMessages));
+  };
+
+  const markMessageRead = (id: string, read: boolean) => {
+    const nextMessages = messages.map((m) => (m.id === id ? { ...m, read } : m));
+    setMessages(nextMessages);
+    window.localStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(nextMessages));
+  };
+
+  const deleteMessage = (id: string) => {
+    const nextMessages = messages.filter((m) => m.id !== id);
+    setMessages(nextMessages);
+    window.localStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(nextMessages));
+  };
+
   const value = useMemo(
     () => ({
       user,
@@ -379,6 +460,8 @@ export const AuthProvider = ({ children }: Props) => {
       subscriptionPlans,
       coaches,
       equipment,
+      gymClasses,
+      messages,
       isAuthenticated: user !== null,
       login,
       register,
@@ -396,8 +479,14 @@ export const AuthProvider = ({ children }: Props) => {
       addEquipment,
       editEquipment,
       deleteEquipment,
+      addGymClass,
+      editGymClass,
+      deleteGymClass,
+      addMessage,
+      markMessageRead,
+      deleteMessage,
     }),
-    [user, users, subscriptionPlans, coaches, equipment]
+    [user, users, subscriptionPlans, coaches, equipment, gymClasses, messages]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

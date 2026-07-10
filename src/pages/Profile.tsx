@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "@/assets/Logo.png";
 import { useAuth } from "@/auth/AuthContext";
+import { useScrollableTabs } from "@/shared/useScrollableTabs";
+import { useLanguage } from "@/shared/LanguageContext";
 
 const Profile = () => {
   const {
@@ -12,8 +14,10 @@ const Profile = () => {
     updateCurrentUserProfile,
   } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [activeTab, setActiveTab] = useState<"dashboard" | "profile" | "coaches" | "equipment">("dashboard");
+  const tabBarProps = useScrollableTabs();
   const [timeLeft, setTimeLeft] = useState("");
   const [profileName, setProfileName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -32,7 +36,7 @@ const Profile = () => {
 
   useEffect(() => {
     if (!user?.subscriptionExpiresAt) {
-      setTimeLeft("No active subscription");
+      setTimeLeft(t("profile_no_timer"));
       return;
     }
 
@@ -42,7 +46,7 @@ const Profile = () => {
       const difference = expiry - now;
 
       if (difference <= 0) {
-        setTimeLeft("Subscription Expired");
+        setTimeLeft(t("profile_expired"));
         return;
       }
 
@@ -74,7 +78,7 @@ const Profile = () => {
       personalGoals,
       avatarUrl,
     });
-    setProfileMessage("Profile updated.");
+    setProfileMessage(t("profile_updated_toast"));
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,46 +110,49 @@ const Profile = () => {
         </header>
 
         {/* TAB NAVIGATION */}
-        <div className="flex flex-wrap border-b border-gray-100 bg-gray-50 rounded-t-md px-4 pt-2">
+        <div
+          {...tabBarProps}
+          className="flex overflow-x-auto border-b border-gray-100 bg-gray-50 rounded-t-md px-4 pt-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus:outline-none"
+        >
           <button
-            className={`px-6 py-3 font-bold text-sm transition-colors duration-200 border-b-2 ${
+            className={`shrink-0 whitespace-nowrap px-6 py-3 font-bold text-sm transition-colors duration-200 border-b-2 ${
               activeTab === "dashboard"
                 ? "border-secondary-500 text-secondary-500"
                 : "border-transparent text-gray-400 hover:text-white"
             }`}
             onClick={() => setActiveTab("dashboard")}
           >
-            Dashboard & Subscription
+            {t("profile_tab_dash")}
           </button>
           <button
-            className={`px-6 py-3 font-bold text-sm transition-colors duration-200 border-b-2 ${
+            className={`shrink-0 whitespace-nowrap px-6 py-3 font-bold text-sm transition-colors duration-200 border-b-2 ${
               activeTab === "profile"
                 ? "border-secondary-500 text-secondary-500"
                 : "border-transparent text-gray-400 hover:text-white"
             }`}
             onClick={() => setActiveTab("profile")}
           >
-            Profile Settings
+            {t("profile_tab_settings")}
           </button>
           <button
-            className={`px-6 py-3 font-bold text-sm transition-colors duration-200 border-b-2 ${
+            className={`shrink-0 whitespace-nowrap px-6 py-3 font-bold text-sm transition-colors duration-200 border-b-2 ${
               activeTab === "coaches"
                 ? "border-secondary-500 text-secondary-500"
                 : "border-transparent text-gray-400 hover:text-white"
             }`}
             onClick={() => setActiveTab("coaches")}
           >
-            Coaches
+            {t("profile_tab_coaches")}
           </button>
           <button
-            className={`px-6 py-3 font-bold text-sm transition-colors duration-200 border-b-2 ${
+            className={`shrink-0 whitespace-nowrap px-6 py-3 font-bold text-sm transition-colors duration-200 border-b-2 ${
               activeTab === "equipment"
                 ? "border-secondary-500 text-secondary-500"
                 : "border-transparent text-gray-400 hover:text-white"
             }`}
             onClick={() => setActiveTab("equipment")}
           >
-            Equipment
+            {t("profile_tab_equipment")}
           </button>
         </div>
 
@@ -153,26 +160,26 @@ const Profile = () => {
           {/* DASHBOARD TAB */}
           {activeTab === "dashboard" && (
             <div>
-              <p className="text-sm font-bold text-primary-300 uppercase tracking-wider">Member Dashboard</p>
+              <p className="text-sm font-bold text-primary-300 uppercase tracking-wider">{t("profile_title")}</p>
               <h1 className="mt-2 font-montserrat text-3xl font-bold text-white">
-                Welcome back, {user?.name}
+                {t("profile_welcome")}{user?.name}
               </h1>
 
               <div className="mt-8 grid gap-5 md:grid-cols-3">
                 <div className="rounded-md bg-primary-100 p-5 border border-gray-100">
-                  <p className="text-sm font-bold text-gray-400">Email Address</p>
+                  <p className="text-sm font-bold text-gray-400">{t("profile_email")}</p>
                   <p className="mt-2 font-semibold text-white">{user?.email}</p>
                 </div>
 
                 <div className="rounded-md bg-primary-100 p-5 border border-gray-100">
-                  <p className="text-sm font-bold text-gray-400">Membership Tier</p>
+                  <p className="text-sm font-bold text-gray-400">{t("profile_tier")}</p>
                   <p className="mt-2 text-xl font-black text-primary-300">
-                    {user?.membershipStatus === "None" ? "No Active Plan" : `${user?.membershipStatus} Plan`}
+                    {user?.membershipStatus === "None" ? t("profile_status_none") : `${user?.membershipStatus}${t("profile_status_plan")}`}
                   </p>
                 </div>
 
                 <div className="rounded-md bg-primary-100 p-5 border border-gray-100">
-                  <p className="text-sm font-bold text-gray-400">Time Remaining</p>
+                  <p className="text-sm font-bold text-gray-400">{t("profile_time_remaining")}</p>
                   <p className="mt-2 font-mono text-lg font-bold text-secondary-400">
                     {timeLeft}
                   </p>
@@ -184,13 +191,13 @@ const Profile = () => {
                   className="rounded-md bg-primary-500 px-8 py-3 font-bold text-white transition duration-300 hover:bg-secondary-500"
                   to="/#ourclasses"
                 >
-                  Explore Gym Classes
+                  {t("profile_explore_classes")}
                 </Link>
                 <Link
                   className="rounded-md border-2 border-primary-500 px-8 py-3 font-bold text-primary-300 transition duration-300 hover:bg-primary-500 hover:text-white"
                   to="/#contactus"
                 >
-                  Contact Support
+                  {t("profile_contact_support")}
                 </Link>
               </div>
             </div>
@@ -199,8 +206,8 @@ const Profile = () => {
           {/* PROFILE SETTINGS TAB */}
           {activeTab === "profile" && (
             <div>
-              <p className="text-sm font-bold text-primary-300 uppercase tracking-wider">Profile Settings</p>
-              <h2 className="mt-2 text-2xl font-bold text-white mb-6">Edit Your Member Profile</h2>
+              <p className="text-sm font-bold text-primary-300 uppercase tracking-wider">{t("profile_settings_title")}</p>
+              <h2 className="mt-2 text-2xl font-bold text-white mb-6">{t("profile_edit_heading")}</h2>
 
               <form onSubmit={handleProfileSubmit} className="grid gap-8 md:grid-cols-[220px_1fr]">
                 <div className="flex flex-col items-center gap-4 rounded-md border border-gray-100 bg-primary-100 p-6">
@@ -219,7 +226,7 @@ const Profile = () => {
                   </div>
 
                   <label className="w-full cursor-pointer rounded-md bg-secondary-500 px-4 py-2 text-center text-sm font-bold text-white transition duration-300 hover:bg-primary-500">
-                    Upload Avatar
+                    {t("profile_upload_avatar")}
                     <input
                       accept="image/*"
                       className="hidden"
@@ -231,7 +238,7 @@ const Profile = () => {
 
                 <div className="grid gap-5">
                   <label className="flex flex-col gap-2 text-sm font-bold text-gray-300">
-                    Display Name
+                    {t("profile_display_name")}
                     <input
                       className="rounded-md border border-gray-100 bg-primary-100 px-4 py-3 font-normal text-white outline-none focus:border-primary-300"
                       onChange={(e) => setProfileName(e.target.value)}
@@ -241,7 +248,7 @@ const Profile = () => {
                   </label>
 
                   <label className="flex flex-col gap-2 text-sm font-bold text-gray-300">
-                    Phone Number
+                    {t("profile_phone")}
                     <input
                       className="rounded-md border border-gray-100 bg-primary-100 px-4 py-3 font-normal text-white outline-none focus:border-primary-300"
                       onChange={(e) => setPhoneNumber(e.target.value)}
@@ -252,7 +259,7 @@ const Profile = () => {
                   </label>
 
                   <label className="flex flex-col gap-2 text-sm font-bold text-gray-300">
-                    Personal Goals
+                    {t("profile_goals")}
                     <textarea
                       className="min-h-[130px] rounded-md border border-gray-100 bg-primary-100 px-4 py-3 font-normal text-white outline-none focus:border-primary-300"
                       onChange={(e) => setPersonalGoals(e.target.value)}
@@ -269,7 +276,7 @@ const Profile = () => {
                     className="w-fit rounded-md bg-secondary-500 px-8 py-3 font-bold text-white transition duration-300 hover:bg-primary-500"
                     type="submit"
                   >
-                    Save Profile
+                    {t("profile_save_profile")}
                   </button>
                 </div>
               </form>
@@ -279,7 +286,7 @@ const Profile = () => {
           {/* COACHES TAB */}
           {activeTab === "coaches" && (
             <div>
-              <h2 className="text-2xl font-bold text-white mb-6">Our Expert Coaches</h2>
+              <h2 className="text-2xl font-bold text-white mb-6">{t("profile_coaches_heading")}</h2>
               <div className="grid gap-6 md:grid-cols-2">
                 {coaches.map((coach) => (
                   <div key={coach.id} className="rounded-md border border-gray-100 bg-primary-100 p-6 hover:border-primary-300 transition-colors">
@@ -295,15 +302,15 @@ const Profile = () => {
           {/* EQUIPMENT TAB */}
           {activeTab === "equipment" && (
             <div>
-              <h2 className="text-2xl font-bold text-white mb-6">Gym Equipment & Facilities</h2>
+              <h2 className="text-2xl font-bold text-white mb-6">{t("profile_equipment_heading")}</h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-gray-100 text-sm font-bold text-gray-300 bg-primary-100">
-                      <th className="py-3 px-4">Name</th>
-                      <th className="py-3 px-4">Category</th>
-                      <th className="py-3 px-4">Quantity Available</th>
-                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4">{t("profile_equip_name")}</th>
+                      <th className="py-3 px-4">{t("profile_equip_category")}</th>
+                      <th className="py-3 px-4">{t("profile_equip_qty")}</th>
+                      <th className="py-3 px-4">{t("profile_equip_status")}</th>
                     </tr>
                   </thead>
                   <tbody>
