@@ -11,9 +11,12 @@ function Htext({ children }: Props) {
         <h1
             className="
                 basis-3/5
-                text-3xl 
+                text-4xl 
                 font-montserrat
-                font-bold">
+                font-bold
+                uppercase
+                tracking-wide
+                text-white">
             {children}
         </h1>
     )

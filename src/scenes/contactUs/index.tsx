@@ -13,10 +13,12 @@ const ContactUs = ({ setselectedPage }: Props) => {
         mb-5
         w-full
         rounded-lg
-        bg-primary-300
+        bg-gray-100
         px-5
         py-3
-        placeholder-white`;
+        text-white
+        placeholder-gray-500
+        outline-primary-500`;
 
     const {
         register,
@@ -74,9 +76,8 @@ const ContactUs = ({ setselectedPage }: Props) => {
                     <p
                         className="
                         my-5">
-                        Congue adipiscing risus commodo placerat. Tellus et in feugiat nisl
-                        sapien vel rhoncus. Placerat at in enim pellentesque. Nulla
-                        adipiscing leo egestas nisi elit risus sit. Nunc cursus sagittis.
+                        Claim your first performance session. Tell us your goal, your current
+                        level, and how hard you are ready to train.
                     </p>
                 </motion.div>
                 {/* FORM AND IMAGE */}
@@ -177,8 +178,13 @@ const ContactUs = ({ setselectedPage }: Props) => {
                                 bg-secondary-500 
                                 px-20 
                                 py-3 
+                                font-bold
+                                uppercase
+                                tracking-wide
+                                text-white
                                 transition 
                                 duration-500 
+                                hover:bg-primary-500
                                 hover:text-white"
                             >
                                 SUBMIT

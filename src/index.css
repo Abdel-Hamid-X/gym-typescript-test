@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&family=Montserrat:wght@700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -9,6 +9,7 @@ body,
 #root {
   height: 100%;
   width: 100%;
-  font-family: "DM Sans", sans-serif;
+  color: #f5f5f5;
+  font-family: "Oswald", sans-serif;
   @apply bg-gray-20;
 }

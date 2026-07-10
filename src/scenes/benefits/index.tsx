@@ -14,7 +14,7 @@ import {
     stagger
 } from "framer-motion"
 import ActionButton from '@/shared/ActionButton';
-import BenefitsPageGraphic from "@/assets/BenefitsPageGraphic.png"
+import BenefitsPage2 from "@/assets/BenefitsPage2.png"
 import HText from "@/shared/HText"
 import Benefit from "./Benefit"
 
@@ -31,17 +31,17 @@ const benefits: Array<BenefitType> = [
     {
         icon: <HomeModernIcon className="h-6 w-6" />,
         title: "State of the Art Facilities",
-        description: "Our facilities are equipped with the latest fitness technology to help you achieve your goals."
+        description: "Industrial-grade racks, platforms, machines, and tools built for serious strength work."
     },
     {
         icon: <UserGroupIcon className="h-6 w-6" />,
         title: "100's of Diverse Classes",
-        description: "We offer a wide variety of classes to suit all fitness levels and interests."
+        description: "Strength, hypertrophy, HIIT, boxing, and conditioning sessions for every training level."
     },
     {
         icon: <AcademicCapIcon className="h-6 w-6" />,
         title: "Expert and Pro Trainers",
-        description: "Our trainers are certified professionals who are passionate about helping you succeed."
+        description: "Performance coaches who push technique, discipline, and measurable progression."
     },
 ]
 
@@ -93,9 +93,9 @@ const Benefits = ({ setselectedPage }: Props) => {
                         className="
                                 my-5 
                                 text-sm">
-                        We provide world class fitness equipment, trainers and classes to
-                        get you to your ultimate fitness goals with ease. We provide true
-                        care into each and every member.
+                        Built for people who train with purpose. Heavy equipment, ruthless
+                        conditioning, expert coaching, and classes that turn effort into
+                        measurable strength.
                     </p>
                 </motion.div>
                 {/* BENEFITS */}
@@ -127,8 +127,11 @@ const Benefits = ({ setselectedPage }: Props) => {
                     {/* GRAPHIC */}
                     <img
                         className="
-                            mx-auto"
-                        src={BenefitsPageGraphic}
+                            mx-auto
+                            w-full
+                            max-w-[420px]
+                            md:max-w-[480px]"
+                        src={BenefitsPage2}
                         alt="benifits-page-graphic" />
                     {/* DESCRIPTIONS */}
                     <div>
@@ -163,11 +166,11 @@ const Benefits = ({ setselectedPage }: Props) => {
                                         },
                                     }}>
                                     <HText>
-                                        MILLIONS OF HAPPY MEMBERS GETTING {" "}
+                                        BUILT FOR PEOPLE CHASING {" "}
                                         <span
                                             className="
                                             text-primary-500">
-                                            FIT
+                                            POWER
                                         </span>
                                     </HText>
                                 </motion.div>
@@ -182,7 +185,7 @@ const Benefits = ({ setselectedPage }: Props) => {
                             }}
                             whileInView="visible"
                             transition={{
-                                delay:0.2, 
+                                delay: 0.2,
                                 duration: 0.5
                             }}
                             variants={{
@@ -197,19 +200,14 @@ const Benefits = ({ setselectedPage }: Props) => {
                             }}>
                             <p
                                 className="my-5">
-                                Nascetur aenean massa auctor tincidunt. Iaculis potenti amet
-                                egestas ultrices consectetur adipiscing ultricies enim. Pulvinar
-                                fames vitae vitae quis. Quis amet vulputate tincidunt at in
-                                nulla nec. Consequat sed facilisis dui sit egestas ultrices
-                                tellus. Ullamcorper arcu id pretium sapien proin integer nisl.
-                                Felis orci diam odio.
+                                Train inside an industrial performance space built for serious
+                                lifting, high-output circuits, and no-excuse consistency. Every
+                                session is structured to sharpen strength, stamina, and control.
                             </p>
                             <p
                                 className="mb-5">
-                                Fringilla a sed at suspendisse ut enim volutpat. Rhoncus vel est
-                                tellus quam porttitor. Mauris velit euismod elementum arcu neque
-                                facilisi. Amet semper tortor facilisis metus nibh. Rhoncus sit
-                                enim mattis odio in risus nunc.
+                                From barbell work to conditioning blocks, the goal is simple:
+                                move heavier, recover faster, and leave stronger than you came in.
                             </p>
                         </motion.div>
                         {/* BUTTON */}

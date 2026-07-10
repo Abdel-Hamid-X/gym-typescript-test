@@ -1,7 +1,7 @@
 import useMediaQuery from '@/hooks/useMediaQuery';
 import ActionButton from '@/shared/ActionButton';
 import HomePageText from "@/assets/HomePageText.png";
-import HomePageGraphic from "@/assets/HomePageGraphic.png";
+import HomePageImg from "@/assets/HomePageImg.png";
 import SponsorRedBull from "@/assets/SponsorRedBull.png";
 import SponsorForbes from "@/assets/SponsorForbes.png";
 import SponsorFortune from "@/assets/SponsorFortune.png";
@@ -95,12 +95,14 @@ const Home = (
                         </div>
                         <p className="
                             mt-8 
-                            text-sm"
+                            text-sm
+                            uppercase
+                            tracking-wide
+                            text-gray-500"
                         >
-                            Unrivaled Gym.
-                            Unparalleled Training Fitness Classes.
-                            World Class Studios to get the Body Shapes That you Dream of..
-                            Get Your Dream Body Now.
+                            Built for heavy training, explosive conditioning, and disciplined
+                            performance. Step into elite coaching, iron-ready studios, and
+                            a program designed to push your limits.
                         </p>
                     </motion.div>
                     {/* ACTIONS */}
@@ -142,8 +144,10 @@ const Home = (
                             className='
                             text-sm 
                             font-bold 
-                            text-primary-500 
+                            text-primary-300 
                             underline 
+                            uppercase
+                            tracking-wide
                             hover:text-secondary-500'
                             onClick={
                                 () => setselectedPage(
@@ -171,7 +175,7 @@ const Home = (
                     <img
                         alt='home-page-graphic'
                         src={
-                            HomePageGraphic
+                            HomePageImg
                         }
                     />
                 </div>
@@ -182,6 +186,8 @@ const Home = (
                     h-[150px]
                     w-full
                     bg-primary-100
+                    border-y
+                    border-gray-100
                     py-10'
                 >
                     <div className='
