@@ -92,7 +92,15 @@ export const AuthProvider = ({ children }: Props) => {
     const storedPlans = window.localStorage.getItem(SUBSCRIPTION_PLANS_STORAGE_KEY);
     let finalPlans = INITIAL_SUBSCRIPTION_PLANS;
     if (storedPlans) {
-      finalPlans = JSON.parse(storedPlans) as SubscriptionPlan[];
+      const parsed = JSON.parse(storedPlans) as SubscriptionPlan[];
+      finalPlans = parsed.map(plan => {
+        const initial = INITIAL_SUBSCRIPTION_PLANS.find(p => p.id === plan.id);
+        if (initial) {
+          return { ...plan, price: initial.price };
+        }
+        return plan;
+      });
+      window.localStorage.setItem(SUBSCRIPTION_PLANS_STORAGE_KEY, JSON.stringify(finalPlans));
     } else {
       window.localStorage.setItem(
         SUBSCRIPTION_PLANS_STORAGE_KEY,
