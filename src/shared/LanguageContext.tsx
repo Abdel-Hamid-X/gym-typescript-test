@@ -109,6 +109,10 @@ export const translations = {
     auth_error_existing: "An account with this email address already exists.",
     auth_error_required: "Name, email, and password are required.",
     auth_error_login: "Invalid email or password.",
+    auth_quick_member: "Sign In as Member",
+    auth_quick_admin: "Sign In as Admin",
+    auth_quick_desc_member: "Demo account with active plan & settings",
+    auth_quick_desc_admin: "Demo account with portal controls & inbox",
 
     // Member Profile & Dashboard
     profile_welcome: "Welcome back, ",
@@ -290,6 +294,10 @@ export const translations = {
     auth_error_existing: "Un compte avec cette adresse email existe déjà.",
     auth_error_required: "Le nom, l'email et le mot de passe sont requis.",
     auth_error_login: "Email ou mot de passe incorrect.",
+    auth_quick_member: "Connexion Membre",
+    auth_quick_admin: "Connexion Admin",
+    auth_quick_desc_member: "Compte démo avec plan actif & réglages",
+    auth_quick_desc_admin: "Compte démo avec accès portail & messages",
 
     // Member Profile & Dashboard
     profile_welcome: "Content de vous revoir, ",

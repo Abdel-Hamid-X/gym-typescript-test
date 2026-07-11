@@ -251,8 +251,8 @@ const Profile = () => {
                     {t("profile_phone")}
                     <input
                       className="rounded-md border border-gray-100 bg-primary-100 px-4 py-3 font-normal text-white outline-none focus:border-primary-300"
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="+213 ..."
+                      onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
+                      placeholder="213..."
                       type="tel"
                       value={phoneNumber}
                     />
