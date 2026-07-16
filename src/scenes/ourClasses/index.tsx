@@ -13,8 +13,9 @@ type Props = {
 }
 
 const OurClasses = ({ setselectedPage }: Props) => {
-    const { gymClasses } = useAuth()
-    const { t } = useLanguage()
+    const { gymClasses, coaches } = useAuth()
+    const { t, language } = useLanguage()
+    const isRtl = language === "ar";
     const sliderRef = useRef<HTMLUListElement>(null)
 
     // --- mouse drag ---
@@ -60,17 +61,17 @@ const OurClasses = ({ setselectedPage }: Props) => {
         if (e.key === "ArrowRight") {
             e.preventDefault()
             sliderRef.current.scrollTo({
-                left: sliderRef.current.scrollLeft + SCROLL_STEP,
+                left: sliderRef.current.scrollLeft + (isRtl ? -SCROLL_STEP : SCROLL_STEP),
                 behavior: "smooth"
             })
         } else if (e.key === "ArrowLeft") {
             e.preventDefault()
             sliderRef.current.scrollTo({
-                left: sliderRef.current.scrollLeft - SCROLL_STEP,
+                left: sliderRef.current.scrollLeft - (isRtl ? -SCROLL_STEP : SCROLL_STEP),
                 behavior: "smooth"
             })
         }
-    }, [])
+    }, [isRtl])
 
     return (
         <section
@@ -100,10 +101,14 @@ const OurClasses = ({ setselectedPage }: Props) => {
                 {/* SLIDER */}
                 <div className="mt-10 relative">
                     {/* fade edges */}
-                    <div className="pointer-events-none absolute left-0 top-0 h-full w-16 z-10
-                        bg-gradient-to-r from-primary-100 to-transparent" />
-                    <div className="pointer-events-none absolute right-0 top-0 h-full w-16 z-10
-                        bg-gradient-to-l from-primary-100 to-transparent" />
+                    <div className={`pointer-events-none absolute top-0 h-full w-16 z-10
+                        ${isRtl 
+                          ? "right-0 bg-gradient-to-l from-primary-100 to-transparent" 
+                          : "left-0 bg-gradient-to-r from-primary-100 to-transparent"}`} />
+                    <div className={`pointer-events-none absolute top-0 h-full w-16 z-10
+                        ${isRtl 
+                          ? "left-0 bg-gradient-to-r from-primary-100 to-transparent" 
+                          : "right-0 bg-gradient-to-l from-primary-100 to-transparent"}`} />
 
                     <ul
                         ref={sliderRef}
@@ -130,6 +135,8 @@ const OurClasses = ({ setselectedPage }: Props) => {
                                     name={item.name}
                                     description={item.description}
                                     image={item.image}
+                                    coachName={coaches.find((coach) => coach.id === item.coachId)?.name}
+                                    schedule={item.schedule}
                                 />
                             </li>
                         ))}

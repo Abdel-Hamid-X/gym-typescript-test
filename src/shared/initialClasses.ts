@@ -15,6 +15,8 @@ export const INITIAL_CLASSES: GymClass[] = [
     description:
       "Heavy compound lifts, progressive overload, and technical coaching for bigger numbers and stronger bodies.",
     image: Weights,
+    coachId: "coach-1",
+    schedule: [{ id: "slot-1", weekday: "monday", startTime: "18:00", durationMinutes: 60, capacity: 16 }],
   },
   {
     id: "class-2",
@@ -22,6 +24,8 @@ export const INITIAL_CLASSES: GymClass[] = [
     description:
       "Mobility and recovery sessions built to keep strong athletes moving, bracing, and lifting well.",
     image: image2,
+    coachId: "coach-2",
+    schedule: [{ id: "slot-2", weekday: "tuesday", startTime: "17:30", durationMinutes: 60, capacity: 18 }],
   },
   {
     id: "class-3",
@@ -29,6 +33,8 @@ export const INITIAL_CLASSES: GymClass[] = [
     description:
       "Core strength, trunk stability, and loaded carries for better power transfer under pressure.",
     image: abCoreImg,
+    coachId: "coach-3",
+    schedule: [{ id: "slot-3", weekday: "wednesday", startTime: "18:30", durationMinutes: 45, capacity: 20 }],
   },
   {
     id: "class-4",
@@ -36,6 +42,8 @@ export const INITIAL_CLASSES: GymClass[] = [
     description:
       "Clip in and get lost in the music, high-intensity, low-impact indoor Cardio class",
     image: cardioImg,
+    coachId: "coach-3",
+    schedule: [{ id: "slot-4", weekday: "thursday", startTime: "19:00", durationMinutes: 45, capacity: 22 }],
   },
   {
     id: "class-5",
@@ -43,6 +51,8 @@ export const INITIAL_CLASSES: GymClass[] = [
     description:
       "Full-body conditioning sessions for lean muscle, stamina, and relentless pace.",
     image: fitnessImg,
+    coachId: "coach-4",
+    schedule: [{ id: "slot-5", weekday: "friday", startTime: "18:00", durationMinutes: 60, capacity: 18 }],
   },
   {
     id: "class-6",
@@ -50,5 +60,7 @@ export const INITIAL_CLASSES: GymClass[] = [
     description:
       "Coach-led performance sessions focused on strength, speed, and repeatable discipline.",
     image: trainingImg,
+    coachId: "coach-1",
+    schedule: [{ id: "slot-6", weekday: "saturday", startTime: "10:00", durationMinutes: 75, capacity: 14 }],
   },
 ];

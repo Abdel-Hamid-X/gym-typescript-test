@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import type { User } from "@/shared/mockData";
+import { getRoleHome } from "./roleRoutes";
 
 type Props = {
   children: ReactNode;
@@ -17,7 +18,7 @@ const ProtectedRoute = ({ children, role }: Props) => {
   }
 
   if (role && user?.role !== role) {
-    return <Navigate to={user?.role === "admin" ? "/admin" : "/profile"} replace />;
+    return <Navigate to={getRoleHome(user?.role)} replace />;
   }
 
   return children;

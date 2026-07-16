@@ -1,10 +1,12 @@
 import React, { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import Logo from "@/assets/Logo.png";
 import { useAuth } from "@/auth/AuthContext";
 import { Coach, Equipment, GymClass, SubscriptionPlan } from "@/shared/mockData";
 import { useScrollableTabs } from "@/shared/useScrollableTabs";
-import { useLanguage } from "@/shared/LanguageContext";
+import { formatPlanName, getLocalizedPlanContent, useLanguage } from "@/shared/LanguageContext";
+import ClassScheduleEditor from "@/shared/ClassScheduleEditor";
 
 const AdminDashboard = () => {
   const {
@@ -30,11 +32,26 @@ const AdminDashboard = () => {
     addGymClass,
     editGymClass,
     deleteGymClass,
+    assignCoachToClass,
+    addClassSchedule,
+    editClassSchedule,
+    deleteClassSchedule,
     markMessageRead,
     deleteMessage,
   } = useAuth();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isRtl = language === "ar";
+  const equipmentTypeLabels = {
+    Strength: t("admin_type_strength"),
+    Cardio: t("admin_type_cardio"),
+    Accessories: t("admin_type_accessories"),
+    Other: t("admin_type_other"),
+  } as const;
+  const equipmentStatusLabels = {
+    Operational: t("admin_status_operational"),
+    "Under Maintenance": t("admin_status_maintenance"),
+  } as const;
 
   const [activeTab, setActiveTab] = useState<"members" | "subscriptions" | "coaches" | "equipment" | "classes" | "inbox">("members");
   const unreadCount = messages.filter((m) => !m.read).length;
@@ -51,6 +68,9 @@ const AdminDashboard = () => {
   const [coachName, setCoachName] = useState("");
   const [coachSpec, setCoachSpec] = useState("");
   const [coachBio, setCoachBio] = useState("");
+  const [coachEmail, setCoachEmail] = useState("");
+  const [coachPassword, setCoachPassword] = useState("");
+  const [coachError, setCoachError] = useState("");
   const [editingCoach, setEditingCoach] = useState<Coach | null>(null);
 
   // Equipment Forms State
@@ -138,18 +158,36 @@ const AdminDashboard = () => {
   // Coaches logic
   const handleAddCoach = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!coachName || !coachSpec) return;
-    addCoach(coachName, coachSpec, coachBio);
+    const result = addCoach({ name: coachName, specialization: coachSpec, bio: coachBio, email: coachEmail, password: coachPassword });
+    if (result !== "success") {
+      setCoachError(t(result === "duplicate-email" ? "admin_coach_duplicate" : "admin_coach_invalid"));
+      return;
+    }
     setCoachName("");
     setCoachSpec("");
     setCoachBio("");
+    setCoachEmail("");
+    setCoachPassword("");
+    setCoachError("");
   };
 
   const handleSaveCoachEdit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingCoach) return;
-    editCoach(editingCoach.id, editingCoach.name, editingCoach.specialization, editingCoach.bio);
+    const result = editCoach(editingCoach.id, {
+      name: editingCoach.name,
+      specialization: editingCoach.specialization,
+      bio: editingCoach.bio,
+      email: editingCoach.email,
+      password: coachPassword,
+    });
+    if (result !== "success") {
+      setCoachError(t(result === "duplicate-email" ? "admin_coach_duplicate" : "admin_coach_invalid"));
+      return;
+    }
     setEditingCoach(null);
+    setCoachPassword("");
+    setCoachError("");
   };
 
   // Equipment logic
@@ -171,7 +209,10 @@ const AdminDashboard = () => {
   };
 
   return (
-    <main className="min-h-screen bg-gray-20 px-6 py-10 text-white animate-fade-in">
+    <main
+      className={`min-h-screen bg-gray-20 px-6 py-10 text-white animate-fade-in ${isRtl ? "rtl text-right" : "ltr text-left"}`}
+      dir={isRtl ? "rtl" : "ltr"}
+    >
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
         <header className="flex flex-wrap items-center justify-between gap-6">
           <div className="flex items-center gap-4">
@@ -179,7 +220,7 @@ const AdminDashboard = () => {
               <img alt="Evogym logo" src={Logo} />
             </Link>
             <span className="rounded-full bg-primary-100 border border-primary-500 px-3 py-1 text-xs font-bold text-primary-300">
-              Admin Portal
+              {t("admin_portal")}
             </span>
           </div>
 
@@ -188,7 +229,7 @@ const AdminDashboard = () => {
             onClick={handleLogout}
             type="button"
           >
-            Logout
+            {t("admin_logout")}
           </button>
         </header>
 
@@ -247,7 +288,7 @@ const AdminDashboard = () => {
           >
             {t("admin_tab_inbox")}
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary-500 text-[10px] font-black text-white">
+              <span className={`absolute -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary-500 text-[10px] font-black text-white ${isRtl ? "-left-1" : "-right-1"}`}>
                 {unreadCount}
               </span>
             )}
@@ -266,12 +307,20 @@ const AdminDashboard = () => {
 
         {/* TAB BODY */}
         <section className="overflow-hidden rounded-b-md border-2 border-t-0 border-gray-100 bg-gray-50 px-4 py-8 sm:px-8 sm:py-10">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+            >
           {/* MEMBERS TAB */}
           {activeTab === "members" && (
             <div>
               <h2 className="text-2xl font-bold text-white mb-6 animate-slide-down">{t("admin_members_heading")}</h2>
               <div className="max-w-full overflow-x-auto">
-                <table className="min-w-[760px] text-left border-collapse">
+                <table className={`min-w-[760px] ${isRtl ? "text-right" : "text-left"} border-collapse`}>
                   <thead>
                     <tr className="border-b border-gray-100 text-sm font-bold text-gray-300 bg-primary-100">
                       <th className="py-3 px-4">{t("admin_col_name")}</th>
@@ -298,10 +347,10 @@ const AdminDashboard = () => {
                                 onChange={(e) => handleTierChange(m.email, e.target.value)}
                                 className="rounded border border-gray-100 bg-gray-50 text-white px-2 py-1 font-semibold text-xs outline-none"
                               >
-                                <option value="None" className="bg-gray-50">None</option>
+                                <option value="None" className="bg-gray-50">{t("profile_status_none")}</option>
                                 {subscriptionPlans.map((plan) => (
                                   <option value={plan.name} className="bg-gray-50" key={plan.id}>
-                                    {plan.name}
+                                    {formatPlanName(plan.name, language)}
                                   </option>
                                 ))}
                               </select>
@@ -310,7 +359,7 @@ const AdminDashboard = () => {
                               {m.subscriptionExpiresAt ? (
                                 <span className={isExpired ? "text-primary-500 font-bold" : "text-gray-300"}>
                                   {new Date(m.subscriptionExpiresAt).toLocaleDateString()}
-                                  {isExpired ? " (Expired)" : ""}
+                                  {isExpired ? t("admin_expired") : ""}
                                 </span>
                               ) : (
                                 t("admin_no_plan")
@@ -321,13 +370,13 @@ const AdminDashboard = () => {
                                 onClick={() => adjustDays(m.email, 7)}
                                 className="rounded bg-primary-100 hover:bg-primary-300 border border-primary-500/20 text-primary-300 px-2 py-1 text-xs font-bold"
                               >
-                                +7 Days
+                                {t("admin_add_days")}
                               </button>
                               <button
                                 onClick={() => adjustDays(m.email, -7)}
                                 className="rounded bg-gray-100/10 hover:bg-gray-100/20 border border-gray-500/20 text-gray-300 px-2 py-1 text-xs font-bold"
                               >
-                                -7 Days
+                                {t("admin_remove_days")}
                               </button>
                               <button
                                 onClick={() => deleteUser(m.email)}
@@ -367,7 +416,7 @@ const AdminDashboard = () => {
                           : setPlanName(e.target.value)
                       }
                       className="rounded border border-gray-100 bg-gray-50 text-white px-3 py-2 font-normal text-sm outline-none focus:border-primary-300"
-                      placeholder="Plan 1"
+                      placeholder={t("admin_plan_placeholder")}
                       required
                     />
                   </label>
@@ -416,7 +465,7 @@ const AdminDashboard = () => {
                           : setPlanFeatures(e.target.value)
                       }
                       className="rounded border border-gray-100 bg-gray-50 text-white px-3 py-2 font-normal text-sm outline-none focus:border-primary-300"
-                      placeholder={"One feature per line"}
+                      placeholder={t("admin_feature_placeholder")}
                     />
                   </label>
 
@@ -441,21 +490,24 @@ const AdminDashboard = () => {
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
-                {subscriptionPlans.map((plan) => (
-                  <article
+                {subscriptionPlans.map((plan) => {
+                  const displayedPlan = getLocalizedPlanContent(plan, language);
+
+                  return (
+                    <article
                     className="rounded-md border border-gray-100 bg-primary-100 p-5"
                     key={plan.id}
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <h4 className="font-montserrat text-3xl uppercase text-primary-300">
-                          {plan.name}
+                          {displayedPlan.name}
                         </h4>
-                        <p className="mt-2 text-2xl font-bold text-white">
-                          {plan.price.toLocaleString("fr-DZ")} DA/mois
+                        <p className={`mt-2 text-2xl font-bold text-white ${isRtl ? "numbers" : ""}`}>
+                          {plan.price.toLocaleString("fr-DZ")} DA {t("plans_monthly")}
                         </p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 shrink-0">
                         <button
                           onClick={() => setEditingPlan(plan)}
                           className="rounded bg-gray-100/10 hover:bg-gray-100/20 border border-gray-500/20 text-gray-300 px-2 py-1 text-xs font-bold"
@@ -470,16 +522,17 @@ const AdminDashboard = () => {
                         </button>
                       </div>
                     </div>
-                    <p className="mt-4 text-sm text-gray-400">{plan.description}</p>
+                    <p className="mt-4 text-sm text-gray-400">{displayedPlan.description}</p>
                     <ul className="mt-4 flex flex-col gap-2 text-sm text-gray-300">
-                      {plan.features.map((feature) => (
+                      {displayedPlan.features.map((feature) => (
                         <li className="border-b border-gray-100 pb-2" key={feature}>
                           {feature}
                         </li>
                       ))}
                     </ul>
-                  </article>
-                ))}
+                    </article>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -507,7 +560,7 @@ const AdminDashboard = () => {
                           : setCoachName(e.target.value)
                       }
                       className="rounded border border-gray-100 bg-gray-50 text-white px-3 py-2 font-normal text-sm outline-none focus:border-primary-300"
-                      placeholder="e.g. Marcus Vance"
+                      placeholder={t("admin_coach_name_placeholder")}
                       required
                     />
                   </label>
@@ -522,8 +575,29 @@ const AdminDashboard = () => {
                           : setCoachSpec(e.target.value)
                       }
                       className="rounded border border-gray-100 bg-gray-50 text-white px-3 py-2 font-normal text-sm outline-none focus:border-primary-300"
-                      placeholder="e.g. HIIT & Endurance"
+                      placeholder={t("admin_coach_spec_placeholder")}
                       required
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 text-xs font-bold text-gray-300">
+                    {t("admin_coach_email")}
+                    <input
+                      type="email"
+                      value={editingCoach ? editingCoach.email : coachEmail}
+                      onChange={(e) => editingCoach ? setEditingCoach({ ...editingCoach, email: e.target.value }) : setCoachEmail(e.target.value)}
+                      className="rounded border border-gray-100 bg-gray-50 text-white px-3 py-2 font-normal text-sm outline-none focus:border-primary-300"
+                      required
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 text-xs font-bold text-gray-300 md:col-span-3">
+                    {t("admin_coach_password")}
+                    <input
+                      type="password"
+                      value={coachPassword}
+                      onChange={(e) => setCoachPassword(e.target.value)}
+                      className="rounded border border-gray-100 bg-gray-50 text-white px-3 py-2 font-normal text-sm outline-none focus:border-primary-300"
+                      placeholder={editingCoach?.accountActive ? t("admin_coach_password_hint") : ""}
+                      required={!editingCoach?.accountActive}
                     />
                   </label>
                   <label className="flex flex-col gap-1 text-xs font-bold text-gray-300 md:col-span-3">
@@ -537,9 +611,11 @@ const AdminDashboard = () => {
                           : setCoachBio(e.target.value)
                       }
                       className="rounded border border-gray-100 bg-gray-50 text-white px-3 py-2 font-normal text-sm outline-none focus:border-primary-300"
-                      placeholder="Write a brief background..."
+                      placeholder={t("admin_coach_bio_placeholder")}
                     />
                   </label>
+
+                  {coachError && <p className="text-sm font-bold text-primary-500 md:col-span-3">{coachError}</p>}
 
                   <div className="flex gap-3 md:col-span-3">
                     <button
@@ -551,7 +627,7 @@ const AdminDashboard = () => {
                     {editingCoach && (
                       <button
                         type="button"
-                        onClick={() => setEditingCoach(null)}
+                        onClick={() => { setEditingCoach(null); setCoachPassword(""); setCoachError(""); }}
                         className="rounded bg-gray-100/10 hover:bg-gray-150 text-gray-300 font-bold px-6 py-2 text-sm"
                       >
                         {t("admin_cancel")}
@@ -563,7 +639,7 @@ const AdminDashboard = () => {
 
               {/* COACHES LIST */}
               <div>
-                <h3 className="text-xl font-bold text-white mb-4">Current Coaches</h3>
+                <h3 className="text-xl font-bold text-white mb-4">{t("admin_coaches_heading")}</h3>
                 <div className="grid gap-4 md:grid-cols-2">
                   {coaches.map((c) => (
                     <div key={c.id} className="rounded border border-gray-100 bg-primary-100 p-5 flex justify-between gap-4">
@@ -573,10 +649,14 @@ const AdminDashboard = () => {
                           {c.specialization}
                         </span>
                         <p className="text-sm text-gray-400 mt-3">{c.bio}</p>
+                        <p className="mt-3 text-xs text-gray-500">{c.email || t("admin_coach_account_inactive")}</p>
+                        <p className={`mt-1 text-xs font-bold ${c.accountActive ? "text-green-400" : "text-gray-500"}`}>
+                          {c.accountActive ? t("admin_coach_account_active") : t("admin_coach_account_inactive")}
+                        </p>
                       </div>
                       <div className="flex flex-col gap-2 shrink-0">
                         <button
-                          onClick={() => setEditingCoach(c)}
+                          onClick={() => { setEditingCoach(c); setCoachPassword(""); setCoachError(""); }}
                           className="rounded bg-gray-100/10 hover:bg-gray-100/20 border border-gray-500/20 text-gray-300 font-bold px-3 py-1 text-xs"
                         >
                           {t("admin_edit")}
@@ -618,7 +698,7 @@ const AdminDashboard = () => {
                           : setEqName(e.target.value)
                       }
                       className="rounded border border-gray-100 bg-gray-50 text-white px-3 py-2 font-normal text-sm outline-none focus:border-primary-300"
-                      placeholder="e.g. Rowers"
+                      placeholder={t("admin_equipment_placeholder")}
                       required
                     />
                   </label>
@@ -633,10 +713,10 @@ const AdminDashboard = () => {
                       }
                       className="rounded border border-gray-100 bg-gray-50 text-white px-3 py-2 font-normal text-sm outline-none focus:border-primary-300"
                     >
-                      <option value="Strength" className="bg-gray-50">Strength</option>
-                      <option value="Cardio" className="bg-gray-50">Cardio</option>
-                      <option value="Accessories" className="bg-gray-50">Accessories</option>
-                      <option value="Other" className="bg-gray-50">Other</option>
+                      <option value="Strength" className="bg-gray-50">{equipmentTypeLabels.Strength}</option>
+                      <option value="Cardio" className="bg-gray-50">{equipmentTypeLabels.Cardio}</option>
+                      <option value="Accessories" className="bg-gray-50">{equipmentTypeLabels.Accessories}</option>
+                      <option value="Other" className="bg-gray-50">{equipmentTypeLabels.Other}</option>
                     </select>
                   </label>
                   <label className="flex flex-col gap-1 text-xs font-bold text-gray-300">
@@ -665,8 +745,8 @@ const AdminDashboard = () => {
                       }
                       className="rounded border border-gray-100 bg-gray-50 text-white px-3 py-2 font-normal text-sm outline-none focus:border-primary-300"
                     >
-                      <option value="Operational" className="bg-gray-50">Operational</option>
-                      <option value="Under Maintenance" className="bg-gray-50">Under Maintenance</option>
+                      <option value="Operational" className="bg-gray-50">{equipmentStatusLabels.Operational}</option>
+                      <option value="Under Maintenance" className="bg-gray-50">{equipmentStatusLabels["Under Maintenance"]}</option>
                     </select>
                   </label>
 
@@ -692,13 +772,13 @@ const AdminDashboard = () => {
 
               {/* EQUIPMENT TABLE */}
               <div>
-                <h3 className="text-xl font-bold text-white mb-4">Equipment List</h3>
+                <h3 className="text-xl font-bold text-white mb-4">{t("admin_equipment_heading")}</h3>
                 <div className="max-w-full overflow-x-auto">
-                  <table className="min-w-[720px] text-left border-collapse">
+                  <table className={`min-w-[720px] ${isRtl ? "text-right" : "text-left"} border-collapse`}>
                     <thead>
                       <tr className="border-b border-gray-100 text-sm font-bold text-gray-300 bg-primary-100">
                         <th className="py-3 px-4">{t("admin_col_name")}</th>
-                        <th className="py-3 px-4">{t("admin_col_tier")}</th>
+                        <th className="py-3 px-4">{t("admin_eq_type")}</th>
                         <th className="py-3 px-4">{t("admin_eq_qty")}</th>
                         <th className="py-3 px-4">{t("admin_eq_status")}</th>
                         <th className="py-3 px-4">{t("admin_col_actions")}</th>
@@ -708,8 +788,8 @@ const AdminDashboard = () => {
                       {equipment.map((item) => (
                         <tr key={item.id} className="border-b border-gray-100 hover:bg-primary-100/50 text-sm text-gray-300">
                           <td className="py-3 px-4 font-semibold text-white">{item.name}</td>
-                          <td className="py-3 px-4">{item.type}</td>
-                          <td className="py-3 px-4">{item.quantity}</td>
+                          <td className="py-3 px-4">{equipmentTypeLabels[item.type]}</td>
+                          <td className={`py-3 px-4 ${isRtl ? "numbers" : ""}`}>{item.quantity}</td>
                           <td className="py-3 px-4">
                             <span
                               className={`inline-block px-3 py-1 text-xs font-bold rounded-full ${
@@ -718,7 +798,7 @@ const AdminDashboard = () => {
                                   : "bg-orange-955/60 text-orange-400 border border-orange-900/50"
                               }`}
                             >
-                              {item.status}
+                            {equipmentStatusLabels[item.status]}
                             </span>
                           </td>
                           <td className="py-3 px-4 flex gap-2">
@@ -749,12 +829,12 @@ const AdminDashboard = () => {
             <div>
               <div className="mb-6 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-bold text-primary-300 uppercase tracking-wider">Contact Inbox</p>
+                  <p className="text-sm font-bold text-primary-300 uppercase tracking-wider">{t("admin_tab_inbox")}</p>
                   <h2 className="mt-1 text-2xl font-bold text-white">
-                    Messages
+                    {t("admin_tab_inbox")}
                     {unreadCount > 0 && (
-                      <span className="ml-3 inline-flex items-center rounded-full bg-primary-500/20 border border-primary-500/40 px-3 py-0.5 text-sm font-bold text-primary-300">
-                        {unreadCount} unread
+                      <span className={`inline-flex items-center rounded-full bg-primary-500/20 border border-primary-500/40 px-3 py-0.5 text-sm font-bold text-primary-300 ${isRtl ? "mr-3" : "ml-3"}`}>
+                        {unreadCount} {t("admin_tab_inbox")}
                       </span>
                     )}
                   </h2>
@@ -766,8 +846,8 @@ const AdminDashboard = () => {
                   <svg className="h-10 w-10 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25H4.5a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5H4.5a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                   </svg>
-                  <p className="text-gray-400 font-semibold">No messages yet.</p>
-                  <p className="text-sm text-gray-500">Messages submitted via the Contact form will appear here.</p>
+                  <p className="text-gray-400 font-semibold">{t("admin_tab_inbox")}</p>
+                  <p className="text-sm text-gray-500">{t("admin_inbox_empty")}</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
@@ -831,9 +911,17 @@ const AdminDashboard = () => {
               addGymClass={addGymClass}
               editGymClass={editGymClass}
               deleteGymClass={deleteGymClass}
+              coaches={coaches}
+              assignCoachToClass={assignCoachToClass}
+              addClassSchedule={addClassSchedule}
+              editClassSchedule={editClassSchedule}
+              deleteClassSchedule={deleteClassSchedule}
+              isRtl={isRtl}
             />
           )}
 
+            </motion.div>
+          </AnimatePresence>
         </section>
       </div>
     </main>
@@ -845,16 +933,28 @@ export default AdminDashboard;
 /* ── Class Manager Panel ─────────────────────────────────────── */
 type ClassManagerProps = {
   gymClasses: GymClass[];
+  coaches: Coach[];
   addGymClass: (name: string, description: string, image: string) => void;
   editGymClass: (id: string, name: string, description: string, image: string) => void;
   deleteGymClass: (id: string) => void;
+  assignCoachToClass: (classId: string, coachId: string | null) => void;
+  addClassSchedule: React.ComponentProps<typeof ClassScheduleEditor>["addSlot"];
+  editClassSchedule: React.ComponentProps<typeof ClassScheduleEditor>["editSlot"];
+  deleteClassSchedule: React.ComponentProps<typeof ClassScheduleEditor>["deleteSlot"];
+  isRtl: boolean;
 };
 
 const ClassManagerPanel = ({
   gymClasses,
+  coaches,
   addGymClass,
   editGymClass,
   deleteGymClass,
+  assignCoachToClass,
+  addClassSchedule,
+  editClassSchedule,
+  deleteClassSchedule,
+  isRtl,
 }: ClassManagerProps) => {
   const { t } = useLanguage();
   const [editingClass, setEditingClass] = useState<GymClass | null>(null);
@@ -917,7 +1017,7 @@ const ClassManagerPanel = ({
         </h3>
         <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
           {/* IMAGE UPLOAD */}
-          <div className="flex flex-col gap-3 md:row-span-3">
+          <div className={`flex flex-col gap-3 md:row-span-3 ${isRtl ? "md:order-2" : ""}`}>
             <div className="relative aspect-[4/3] overflow-hidden rounded-md border border-gray-100 bg-gray-20">
               {currentPreview ? (
                 <img
@@ -930,12 +1030,12 @@ const ClassManagerPanel = ({
                   <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 19.5h16.5M13.5 3.75h.008v.008H13.5V3.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                   </svg>
-                  <p className="text-sm">No image selected</p>
+                  <p className="text-sm">{t("admin_no_image")}</p>
                 </div>
               )}
             </div>
             <label className="cursor-pointer rounded-md bg-secondary-500 px-4 py-2 text-center text-sm font-bold text-white transition duration-300 hover:bg-primary-500">
-              {currentPreview ? "Change Image" : "Upload Image"}
+              {currentPreview ? t("admin_change_image") : t("admin_upload_image")}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -947,31 +1047,31 @@ const ClassManagerPanel = ({
           </div>
 
           {/* NAME + DESC */}
-          <label className="flex flex-col gap-1 text-xs font-bold text-gray-300">
+          <label className={`flex flex-col gap-1 text-xs font-bold text-gray-300 ${isRtl ? "md:order-1" : ""}`}>
             {t("admin_class_name")}
             <input
               type="text"
               value={className}
               onChange={(e) => setClassName(e.target.value)}
               className="rounded border border-gray-100 bg-gray-50 text-white px-3 py-2 font-normal text-sm outline-none focus:border-primary-300"
-              placeholder="e.g. Cardio Classes"
+              placeholder={t("admin_class_name_placeholder")}
               required
             />
           </label>
 
-          <label className="flex flex-col gap-1 text-xs font-bold text-gray-300 md:col-start-2">
+          <label className={`flex flex-col gap-1 text-xs font-bold text-gray-300 md:col-start-2 ${isRtl ? "md:order-3" : ""}`}>
             {t("admin_class_desc")}
             <textarea
               rows={5}
               value={classDesc}
               onChange={(e) => setClassDesc(e.target.value)}
               className="rounded border border-gray-100 bg-gray-50 text-white px-3 py-2 font-normal text-sm outline-none focus:border-primary-300"
-              placeholder="Short description shown on the card overlay…"
+              placeholder={t("admin_class_desc_placeholder")}
               required
             />
           </label>
 
-          <div className="flex gap-3 md:col-start-2">
+          <div className={`flex gap-3 md:col-start-2 ${isRtl ? "md:order-4" : ""}`}>
             <button
               type="submit"
               className="rounded bg-secondary-500 hover:bg-primary-500 text-white font-bold px-6 py-2 text-sm"
@@ -994,9 +1094,9 @@ const ClassManagerPanel = ({
       {/* CLASS GRID */}
       <div>
         <h3 className="mb-4 text-xl font-bold text-white">
-          Current Classes ({gymClasses.length})
+          {t("admin_classes_heading")} ({gymClasses.length})
         </h3>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-2">
           {gymClasses.map((c) => (
             <article
               key={c.id}
@@ -1018,6 +1118,17 @@ const ClassManagerPanel = ({
                   {c.name}
                 </p>
                 <p className="mt-1 line-clamp-2 text-xs text-gray-400">{c.description}</p>
+                <label className="mt-4 flex flex-col gap-1 text-xs font-bold text-gray-400">
+                  {t("admin_assign_coach")}
+                  <select
+                    className="rounded border border-gray-100 bg-gray-50 px-3 py-2 text-white"
+                    value={c.coachId ?? ""}
+                    onChange={(event) => assignCoachToClass(c.id, event.target.value || null)}
+                  >
+                    <option className="bg-gray-50" value="">{t("admin_unassigned")}</option>
+                    {coaches.map((coach) => <option className="bg-gray-50" key={coach.id} value={coach.id}>{coach.name}</option>)}
+                  </select>
+                </label>
                 <div className="mt-3 flex gap-2">
                   <button
                     onClick={() => startEdit(c)}
@@ -1032,6 +1143,7 @@ const ClassManagerPanel = ({
                     {t("admin_delete")}
                   </button>
                 </div>
+                <ClassScheduleEditor gymClass={c} addSlot={addClassSchedule} editSlot={editClassSchedule} deleteSlot={deleteClassSchedule} />
               </div>
             </article>
           ))}

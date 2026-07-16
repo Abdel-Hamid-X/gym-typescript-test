@@ -16,8 +16,12 @@ import SubscriptionPlans from "@/pages/SubscriptionPlans";
 import NotFound from "@/pages/NotFound";
 import AdminRoute from "@/auth/AdminRoute";
 import AdminDashboard from "@/pages/AdminDashboard";
+import CoachDashboard from "@/pages/CoachDashboard";
+import { useLanguage } from "@/shared/LanguageContext";
 
 const LandingPage = () => {
+  const { language } = useLanguage();
+  const isRtl = language === "ar";
   const [
     selectedPage,
     setselectedPage] = useState<SelectedPage>(
@@ -50,7 +54,7 @@ const LandingPage = () => {
 
   return (
     <>
-      <div className="App bg-gray-20">
+      <div className={`App bg-gray-20 ${isRtl ? "rtl" : "ltr"}`} dir={isRtl ? "rtl" : "ltr"}>
         <Navbar
           istopofpage={isTopOfPage}
           selectedPage={selectedPage}
@@ -86,7 +90,7 @@ function App() {
         <Route
           path="/profile"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute role="member">
               <Profile />
             </ProtectedRoute>
           }
@@ -105,6 +109,14 @@ function App() {
             <AdminRoute>
               <AdminDashboard />
             </AdminRoute>
+          }
+        />
+        <Route
+          path="/coach"
+          element={
+            <ProtectedRoute role="coach">
+              <CoachDashboard />
+            </ProtectedRoute>
           }
         />
         <Route path="*" element={<NotFound />} />

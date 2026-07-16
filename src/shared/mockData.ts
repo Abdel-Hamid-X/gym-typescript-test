@@ -1,7 +1,9 @@
 export interface User {
   name: string;
   email: string;
-  role: "member" | "admin";
+  role: "member" | "coach" | "admin";
+  password?: string;
+  coachId?: string;
   membershipStatus: string;
   subscriptionExpiresAt: string | null; // ISO date string
   avatarUrl?: string;
@@ -23,6 +25,18 @@ export interface GymClass {
   name: string;
   description: string;
   image: string; // resolved asset URL or base64 data URL
+  coachId: string | null;
+  schedule: ClassSchedule[];
+}
+
+export type Weekday = "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
+
+export interface ClassSchedule {
+  id: string;
+  weekday: Weekday;
+  startTime: string;
+  durationMinutes: number;
+  capacity: number;
 }
 
 export interface SubscriptionPlan {
@@ -38,6 +52,10 @@ export interface Coach {
   name: string;
   specialization: string;
   bio: string;
+  email: string;
+  phoneNumber: string;
+  avatarUrl: string;
+  accountActive: boolean;
 }
 
 export interface Equipment {
@@ -78,24 +96,40 @@ export const INITIAL_COACHES: Coach[] = [
     name: "Alex Thorne",
     specialization: "Strength & Conditioning",
     bio: "Former powerlifter specializing in compound movement optimization, barbell technique, and hypertrophy phases.",
+    email: "coach@gym.com",
+    phoneNumber: "",
+    avatarUrl: "",
+    accountActive: true,
   },
   {
     id: "coach-2",
     name: "Elena Rostova",
     specialization: "Yoga & Athletic Mobility",
     bio: "Focuses on deep tissue recovery, functional range conditioning, and breathwork for high-intensity athletes.",
+    email: "",
+    phoneNumber: "",
+    avatarUrl: "",
+    accountActive: false,
   },
   {
     id: "coach-3",
     name: "Marcus Vance",
     specialization: "HIIT & Cardio Endurance",
     bio: "Creator of the Shred-60 series. Specializes in aerobic capacity, metabolic conditioning, and speed drills.",
+    email: "",
+    phoneNumber: "",
+    avatarUrl: "",
+    accountActive: false,
   },
   {
     id: "coach-4",
     name: "Sarah Jenkins",
     specialization: "Olympic Weightlifting",
     bio: "USAW Level 2 Coach with over a decade of experience refining clean & jerk and snatch mechanics for competitive athletes.",
+    email: "",
+    phoneNumber: "",
+    avatarUrl: "",
+    accountActive: false,
   },
 ];
 
