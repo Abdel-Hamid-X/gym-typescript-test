@@ -6,32 +6,34 @@
 
 :root {
   color-scheme: dark;
-  --color-bg: #121212;
-  --color-surface: #1a1a1a;
-  --color-panel: #1f1f1f;
-  --color-border: #2a2a2a;
-  --color-text-strong: #f5f5f5;
-  --color-text-soft: #d1d5db;
-  --color-text-muted: #b8b8b8;
-  --color-accent-cyan: #00e5ff;
-  --color-accent-red: #e50914;
-  --color-accent-orange: #ff5a00;
-  --color-accent-orange-soft: #ff8a00;
+  /* Dark mode: warm near-black with the same orange brand accent as light mode. */
+  --color-bg: #1a1005;
+  --color-surface: #2e1b0a;
+  --color-panel: #2e1b0a;
+  --color-border: #6b3b18;
+  --color-text-strong: #f5ede0;
+  --color-text-soft: #e6d2bb;
+  --color-text-muted: #b9a38c;
+  --color-accent-cyan: #c14600;
+  --color-accent-red: #c14600;
+  --color-accent-orange: #ff9d23;
+  --color-accent-orange-soft: #ffc94d;
 }
 
 :root.light {
   color-scheme: light;
-  --color-bg: #f4f6f8;
-  --color-surface: #ffffffc3;
-  --color-panel: #eef1f4d2;
-  --color-border: #d6dde5ae;
-  --color-text-strong: #111827;
-  --color-text-soft: #374151;
-  --color-text-muted: #5b6675;
-  --color-accent-cyan: #007d91;
-  --color-accent-red: #c40011;
-  --color-accent-orange: #e65300;
-  --color-accent-orange-soft: #c96f00;
+  /* Light mode: cream and sand counterpart to the dark warm palette. */
+  --color-bg: #fef9e1;
+  --color-surface: #e5d0ac;
+  --color-panel: #f2e3c8;
+  --color-border: #d5b985;
+  --color-text-strong: #3b220d;
+  --color-text-soft: #5d361a;
+  --color-text-muted: #8e6a43;
+  --color-accent-cyan: #c14600;
+  --color-accent-red: #c14600;
+  --color-accent-orange: #ff9d23;
+  --color-accent-orange-soft: #c14600;
 }
 
 html,
@@ -43,3 +45,30 @@ body,
   font-family: "Oswald", sans-serif;
   @apply bg-gray-20;
 }
+
+/* ── RTL Support ── */
+.rtl {
+  direction: rtl;
+}
+
+.rtl input,
+.rtl textarea,
+.rtl select {
+  text-align: right;
+}
+
+/* Keep numbers in Western digits for RTL */
+.rtl .numbers {
+  direction: ltr;
+  unicode-bidi: embed;
+}
+
+/* RTL fade-edge gradients on ourClasses slider - swap the gradients */
+.rtl .classes-fade-left {
+  background: linear-gradient(to left, var(--color-panel), transparent) !important;
+}
+.rtl .classes-fade-right {
+  background: linear-gradient(to right, var(--color-panel), transparent) !important;
+}
+
+/* RTL-specific animation variants handled inline in JSX */

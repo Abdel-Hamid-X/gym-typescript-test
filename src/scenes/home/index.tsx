@@ -16,7 +16,8 @@ type Props = {
 
 const Home = ({ setselectedPage }: Props) => {
     const isAboveMediumScreens = useMediaQuery("(min-width: 1060px)");
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
+    const isRtl = language === "ar";
 
     return (
         <section
@@ -43,7 +44,7 @@ const Home = ({ setselectedPage }: Props) => {
                         }}
                     >
                         <div className="relative">
-                            <div className="before:absolute before:-top-20 before:-left-20 before:z-[-1] md:before:content-evolvetext">
+                            <div className={`before:absolute before:-top-20 before:z-[-1] md:before:content-evolvetext ${isRtl ? "before:-right-20" : "before:-left-20"}`}>
                                 <img alt="home-page-text" src={HomePageText} />
                             </div>
                         </div>
@@ -54,7 +55,7 @@ const Home = ({ setselectedPage }: Props) => {
 
                     {/* ACTIONS */}
                     <motion.div 
-                        className="mt-8 flex items-center gap-8 md:justify-start"
+                        className={`mt-8 flex items-center gap-8 ${isRtl ? "md:justify-end" : "md:justify-start"}`}
                         initial="hidden"
                         viewport={{ once: true, amount: 0.5 }}
                         whileInView="visible"
@@ -78,7 +79,7 @@ const Home = ({ setselectedPage }: Props) => {
                 </div>
 
                 {/* IMAGE */}
-                <div className="flex md:basis-3/5 justify-center md:z-10 md:ml-40 md:mt-16 md:justify-items-end">
+                <div className={`flex md:basis-3/5 justify-center md:z-10 md:mt-16 md:justify-items-end ${isRtl ? "md:mr-40" : "md:ml-40"}`}>
                     <img alt="home-page-graphic" src={HomePageImg} />
                 </div>
             </motion.div>

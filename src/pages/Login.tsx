@@ -4,13 +4,14 @@ import type { Location } from "react-router-dom";
 import Logo from "@/assets/Logo.png";
 import { useAuth } from "@/auth/AuthContext";
 import { useLanguage } from "@/shared/LanguageContext";
+import { getRoleHome } from "@/auth/roleRoutes";
 
 type LocationState = {
   from?: Location;
 };
 
 const Login = () => {
-  const { isAuthenticated, login, user } = useAuth();
+  const { isAuthenticated, login, user, users } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
@@ -22,7 +23,7 @@ const Login = () => {
   const [error, setError] = useState("");
 
   if (isAuthenticated) {
-    return <Navigate to={user?.role === "admin" ? "/admin" : "/profile"} replace />;
+    return <Navigate to={getRoleHome(user?.role)} replace />;
   }
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -39,24 +40,18 @@ const Login = () => {
       return;
     }
 
-    if (email.trim().toLowerCase() === "admin@gym.com") {
-      navigate("/admin", { replace: true });
-    } else {
-      navigate(redirectTo, { replace: true });
-    }
+    const normalizedEmail = email.trim().toLowerCase();
+    const signedInUser = users.find((stored) => stored.email.toLowerCase() === normalizedEmail);
+    navigate(signedInUser?.role === "member" ? redirectTo : getRoleHome(signedInUser?.role), { replace: true });
   };
 
-  const handleQuickLogin = (role: "member" | "admin") => {
+  const handleQuickLogin = (role: "member" | "coach" | "admin") => {
     setError("");
-    const targetEmail = role === "admin" ? "admin@gym.com" : "demo@gym.com";
-    const targetPassword = role === "admin" ? "adminpassword" : "password";
+    const targetEmail = role === "admin" ? "admin@gym.com" : role === "coach" ? "coach@gym.com" : "demo@gym.com";
+    const targetPassword = role === "admin" ? "adminpassword" : role === "coach" ? "coachpassword" : "password";
 
     if (login(targetEmail, targetPassword)) {
-      if (role === "admin") {
-        navigate("/admin", { replace: true });
-      } else {
-        navigate(redirectTo, { replace: true });
-      }
+      navigate(role === "member" ? redirectTo : getRoleHome(role), { replace: true });
     } else {
       setError(t("auth_error_login"));
     }
@@ -76,7 +71,7 @@ const Login = () => {
           </p>
 
           {/* Quick Login Demo Cards */}
-          <div className="mt-6 grid grid-cols-2 gap-4">
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
             <button
               onClick={() => handleQuickLogin("member")}
               type="button"
@@ -87,6 +82,18 @@ const Login = () => {
                 <span className="font-bold text-xs text-white uppercase tracking-wider">{t("auth_quick_member")}</span>
               </div>
               <span className="text-[10px] text-gray-400 leading-tight mt-1">{t("auth_quick_desc_member")}</span>
+            </button>
+
+            <button
+              onClick={() => handleQuickLogin("coach")}
+              type="button"
+              className="flex flex-col items-start gap-1 rounded-lg border border-primary-500/30 bg-primary-100/40 p-4 text-left transition duration-300 hover:border-secondary-500 hover:bg-primary-100/60 focus:outline-none focus:ring-2 focus:ring-secondary-500 cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-secondary-500/20 text-secondary-500 text-xs">C</span>
+                <span className="font-bold text-xs text-white uppercase tracking-wider">{t("auth_quick_coach")}</span>
+              </div>
+              <span className="text-[10px] text-gray-400 leading-tight mt-1">{t("auth_quick_desc_coach")}</span>
             </button>
 
             <button
@@ -138,6 +145,9 @@ const Login = () => {
           </p>
           <p className="mt-2 text-sm">
             Admin demo: admin@gym.com / adminpassword
+          </p>
+          <p className="mt-2 text-sm">
+            Coach demo: coach@gym.com / coachpassword
           </p>
           <p className="mt-6 text-sm">
             {t("auth_no_account")}{" "}

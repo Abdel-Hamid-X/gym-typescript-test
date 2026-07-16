@@ -1,6 +1,7 @@
 import { SelectedPage } from '@/shared/types'
-import { motion, scale } from 'framer-motion'
+import { motion } from 'framer-motion'
 import AnchorLink from 'react-anchor-link-smooth-scroll'
+import { useLanguage } from '@/shared/LanguageContext'
 
 const childVariant = {
     hidden: { 
@@ -20,6 +21,7 @@ type Props = {
 }
 
 const Benefit = ({ icon, title, description, setselectedPage }: Props) => {
+    const { t } = useLanguage();
     return (
         <motion.div
             variants={childVariant}
@@ -78,7 +80,7 @@ const Benefit = ({ icon, title, description, setselectedPage }: Props) => {
                 href={`#${SelectedPage.ContactUs}`}
             >
                 <p>
-                    Learn More
+                    {t("home_learn_more")}
                 </p>
             </AnchorLink>
         </motion.div>

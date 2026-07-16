@@ -3,9 +3,10 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import Logo from "@/assets/Logo.png";
 import { useAuth } from "@/auth/AuthContext";
 import { useLanguage } from "@/shared/LanguageContext";
+import { getRoleHome } from "@/auth/roleRoutes";
 
 const Register = () => {
-  const { isAuthenticated, register } = useAuth();
+  const { isAuthenticated, register, user } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
 
@@ -15,7 +16,7 @@ const Register = () => {
   const [error, setError] = useState("");
 
   if (isAuthenticated) {
-    return <Navigate to="/profile" replace />;
+    return <Navigate to={getRoleHome(user?.role)} replace />;
   }
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {

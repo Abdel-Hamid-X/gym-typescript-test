@@ -22,7 +22,8 @@ type Props = {
 }
 
 const Benefits = ({ setselectedPage }: Props) => {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
+    const isRtl = language === "ar";
 
     const translatedBenefits: Array<BenefitType> = [
         {
@@ -103,17 +104,17 @@ const Benefits = ({ setselectedPage }: Props) => {
                         amount: 0.5
                     }}
                     variants={Container}>
-                    {translatedBenefits.map((benefit: BenefitType) => (
+                    {translatedBenefits.map((benefit: BenefitType, index: number) => (
                         <Benefit
-                            key={benefit.title}
+                            key={`benefit-${index}`}
                             icon={benefit.icon}
                             title={benefit.title}
                             description={benefit.description}
                             setselectedPage={setselectedPage} />
                     ))}
                 </motion.div>
-                {/* GRAPHICS AND DESCRIPTIONS */}
-                <div className="mt-16 items-center justify-between gap-20 md:mt-28 md:flex">
+                    {/* GRAPHICS AND DESCRIPTIONS */}
+                <div className={`mt-16 items-center justify-between gap-20 md:mt-28 md:flex ${isRtl ? "md:flex-row-reverse" : ""}`}>
                     {/* GRAPHIC */}
                     <img
                         className="
@@ -129,12 +130,12 @@ const Benefits = ({ setselectedPage }: Props) => {
                         <div
                             className="relative">
                             <div
-                                className="
+                                className={`
                                 before:absolute
                                 before:-top-20
-                                before:-left-20
                                 before:z-[-1]
-                                before:content-abstractwaves">
+                                before:content-abstractwaves
+                                ${isRtl ? "before:-right-20" : "before:-left-20"}`}>
                                 <motion.div
                                     initial="hidden"
                                     viewport={{
@@ -148,7 +149,7 @@ const Benefits = ({ setselectedPage }: Props) => {
                                     variants={{
                                         hidden: {
                                             opacity: 0,
-                                            x: 50
+                                            x: isRtl ? -50 : 50
                                         },
                                         visible: {
                                             opacity: 1,
@@ -181,7 +182,7 @@ const Benefits = ({ setselectedPage }: Props) => {
                             variants={{
                                 hidden: {
                                     opacity: 0,
-                                    x: 50
+                                    x: isRtl ? -50 : 50
                                 },
                                 visible: {
                                     opacity: 1,
@@ -203,12 +204,12 @@ const Benefits = ({ setselectedPage }: Props) => {
                             relative
                             mt-16">
                             <div
-                                className="
+                                className={`
                                 before:absolute
                                 before:-bottom-20
-                                before:right-40
                                 before:z-[-1]
-                                before:content-sparkles">
+                                before:content-sparkles
+                                ${isRtl ? "before:left-40" : "before:right-40"}`}>
                                 <ActionButton
                                     setselectedPage={setselectedPage}>
                                     {t("home_join_now")}

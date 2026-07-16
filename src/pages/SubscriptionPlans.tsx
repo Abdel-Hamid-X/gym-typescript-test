@@ -1,12 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import Logo from "@/assets/Logo.png";
 import { useAuth } from "@/auth/AuthContext";
-import { useLanguage } from "@/shared/LanguageContext";
+import { getLocalizedPlanContent, useLanguage } from "@/shared/LanguageContext";
 
 const SubscriptionPlans = () => {
   const { user, subscriptionPlans, subscribeCurrentUser, logout } = useAuth();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isRtl = language === "ar";
 
   const handleLogout = () => {
     logout();
@@ -19,7 +20,10 @@ const SubscriptionPlans = () => {
   };
 
   return (
-    <main className="min-h-screen bg-gray-20 px-6 py-10 text-white">
+    <main
+      className={`min-h-screen bg-gray-20 px-6 py-10 text-white ${isRtl ? "rtl text-right" : "ltr text-left"}`}
+      dir={isRtl ? "rtl" : "ltr"}
+    >
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
         <header className="flex flex-wrap items-center justify-between gap-6">
           <Link to="/" className="w-fit">
@@ -58,6 +62,7 @@ const SubscriptionPlans = () => {
         <section className="grid gap-6 md:grid-cols-3">
           {subscriptionPlans.map((plan) => {
             const isCurrentPlan = user?.membershipStatus === plan.name;
+            const displayedPlan = getLocalizedPlanContent(plan, language);
 
             return (
               <article
@@ -72,17 +77,17 @@ const SubscriptionPlans = () => {
                     {isCurrentPlan ? t("plans_current_plan") : t("plans_available")}
                   </p>
                   <h2 className="mt-3 font-montserrat text-4xl uppercase tracking-wide">
-                    {plan.name}
+                    {displayedPlan.name}
                   </h2>
-                  <p className="mt-3 text-gray-500">{plan.description}</p>
-                  <p className="mt-6 font-montserrat text-5xl text-white">
+                  <p className="mt-3 text-gray-500">{displayedPlan.description}</p>
+                  <p className={`mt-6 font-montserrat text-5xl text-white ${isRtl ? "numbers" : ""}`}>
                     {plan.price.toLocaleString("fr-DZ")} DA
-                    <span className="ml-2 font-dmsans text-base text-gray-500">/mois</span>
+                    <span className={`${isRtl ? "mr-2" : "ml-2"} font-dmsans text-base text-gray-500`}>{t("plans_monthly")}</span>
                   </p>
                 </div>
 
-                <ul className="mt-6 flex flex-1 flex-col gap-3 text-sm text-gray-300">
-                  {plan.features.map((feature) => (
+                <ul className={`mt-6 flex flex-1 flex-col gap-3 text-sm text-gray-300`}>
+                  {displayedPlan.features.map((feature) => (
                     <li className="border-b border-gray-100 pb-2" key={feature}>
                       {feature}
                     </li>

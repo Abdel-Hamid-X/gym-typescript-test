@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
+import { getRoleHome } from "./roleRoutes";
 
 type Props = {
   children: ReactNode;
@@ -16,7 +17,7 @@ const AdminRoute = ({ children }: Props) => {
 
   if (user?.role !== "admin") {
     // If authenticated but not an admin, redirect to member profile
-    return <Navigate to="/profile" replace />;
+    return <Navigate to={getRoleHome(user?.role)} replace />;
   }
 
   return children;
