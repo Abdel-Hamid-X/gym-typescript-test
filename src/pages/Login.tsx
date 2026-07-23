@@ -11,7 +11,7 @@ type LocationState = {
 };
 
 const Login = () => {
-  const { isAuthenticated, login, user, users } = useAuth();
+  const { isAuthenticated, login, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
@@ -26,7 +26,7 @@ const Login = () => {
     return <Navigate to={getRoleHome(user?.role)} replace />;
   }
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
 
@@ -35,22 +35,22 @@ const Login = () => {
       return;
     }
 
-    if (!login(email, password)) {
+    const signedInUser = await login(email, password);
+    if (!signedInUser) {
       setError(t("auth_error_login"));
       return;
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
-    const signedInUser = users.find((stored) => stored.email.toLowerCase() === normalizedEmail);
-    navigate(signedInUser?.role === "member" ? redirectTo : getRoleHome(signedInUser?.role), { replace: true });
+    navigate(signedInUser.role === "member" ? redirectTo : getRoleHome(signedInUser.role), { replace: true });
   };
 
-  const handleQuickLogin = (role: "member" | "coach" | "admin") => {
+  const handleQuickLogin = async (role: "member" | "coach" | "admin") => {
     setError("");
     const targetEmail = role === "admin" ? "admin@gym.com" : role === "coach" ? "coach@gym.com" : "demo@gym.com";
     const targetPassword = role === "admin" ? "adminpassword" : role === "coach" ? "coachpassword" : "password";
 
-    if (login(targetEmail, targetPassword)) {
+    const signedInUser = await login(targetEmail, targetPassword);
+    if (signedInUser) {
       navigate(role === "member" ? redirectTo : getRoleHome(role), { replace: true });
     } else {
       setError(t("auth_error_login"));

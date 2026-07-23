@@ -4,6 +4,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useCallback,
 } from "react";
 import type { ReactNode } from "react";
 import {
@@ -14,13 +15,60 @@ import {
   ContactMessage,
   GymClass,
   ClassSchedule,
-  INITIAL_SUBSCRIPTION_PLANS,
-  INITIAL_COACHES,
-  INITIAL_EQUIPMENT,
+  Weekday,
 } from "@/shared/mockData";
-import { INITIAL_CLASSES } from "@/shared/initialClasses";
+import {
+  fetchMe,
+  loginRequest,
+  registerRequest,
+  logoutRequest,
+  BackendUser,
+} from "@/api/auth";
+import {
+  updateMeProfileRequest,
+  fetchAdminUsers,
+  deactivateUserRequest,
+} from "@/api/users";
+import {
+  fetchPlans,
+  assignMembershipRequest,
+  cancelMembershipRequest,
+  selfAssignMembershipRequest,
+  BackendPlan,
+} from "@/api/plans";
+import {
+  fetchCoaches,
+  createCoachByAdmin,
+  updateCoachProfileByAdmin,
+} from "@/api/coaches";
+import {
+  fetchClasses,
+  createClassByAdmin,
+  updateClassByAdmin,
+  deleteClassByAdmin,
+  assignCoachToClassByAdmin,
+  createScheduleSlotByAdmin,
+  updateScheduleSlotByAdmin,
+  deleteScheduleSlotByAdmin,
+  BackendClass,
+} from "@/api/classes";
+import {
+  fetchEquipment,
+  createEquipmentByAdmin,
+  updateEquipmentByAdmin,
+  deleteEquipmentByAdmin,
+  BackendEquipment,
+} from "@/api/equipment";
+import {
+  submitContactMessage,
+  fetchContactMessagesByAdmin,
+  updateMessageStatusByAdmin,
+  deleteContactMessageByAdmin,
+  BackendMessage,
+} from "@/api/messages";
+import { getToken, removeToken } from "@/api/client";
 
-type RegisterInput = {
+export type RegisterInput = {
   name: string;
   email: string;
   password: string;
@@ -34,7 +82,7 @@ export type CoachAccountInput = {
   password: string;
 };
 
-type AuthContextValue = {
+export type AuthContextValue = {
   user: User | null;
   users: User[];
   subscriptionPlans: SubscriptionPlan[];
@@ -43,60 +91,113 @@ type AuthContextValue = {
   gymClasses: GymClass[];
   messages: ContactMessage[];
   isAuthenticated: boolean;
-  login: (email: string, password: string) => boolean;
-  register: (input: RegisterInput) => boolean;
+  login: (email: string, password: string) => Promise<User | null>;
+  register: (input: RegisterInput) => Promise<User | null>;
   logout: () => void;
-  updateCurrentUserProfile: (profile: Pick<User, "name" | "phoneNumber" | "personalGoals" | "avatarUrl">) => void;
-  subscribeCurrentUser: (planName: string) => void;
-  updateUserSubscription: (email: string, tier: string, expiresAt: string | null) => void;
-  deleteUser: (email: string) => void;
-  addSubscriptionPlan: (name: string, price: number, description: string, features: string[]) => void;
-  editSubscriptionPlan: (id: string, name: string, price: number, description: string, features: string[]) => void;
-  deleteSubscriptionPlan: (id: string) => void;
-  addCoach: (input: CoachAccountInput) => "success" | "duplicate-email" | "invalid";
-  editCoach: (id: string, input: CoachAccountInput) => "success" | "duplicate-email" | "invalid";
-  deleteCoach: (id: string) => void;
-  updateCoachProfile: (id: string, profile: Pick<Coach, "specialization" | "bio" | "phoneNumber" | "avatarUrl">) => void;
-  addEquipment: (name: string, type: Equipment["type"], quantity: number, status: Equipment["status"]) => void;
-  editEquipment: (id: string, name: string, type: Equipment["type"], quantity: number, status: Equipment["status"]) => void;
-  deleteEquipment: (id: string) => void;
-  addGymClass: (name: string, description: string, image: string) => void;
-  editGymClass: (id: string, name: string, description: string, image: string) => void;
-  deleteGymClass: (id: string) => void;
-  assignCoachToClass: (classId: string, coachId: string | null) => void;
-  addClassSchedule: (classId: string, slot: Omit<ClassSchedule, "id">) => boolean;
-  editClassSchedule: (classId: string, slot: ClassSchedule) => boolean;
-  deleteClassSchedule: (classId: string, slotId: string) => void;
-  addMessage: (name: string, email: string, message: string) => void;
-  markMessageRead: (id: string, read: boolean) => void;
-  deleteMessage: (id: string) => void;
+  updateCurrentUserProfile: (profile: Pick<User, "name" | "phoneNumber" | "personalGoals" | "avatarUrl">) => Promise<void>;
+  subscribeCurrentUser: (planName: string) => Promise<void>;
+  updateUserSubscription: (email: string, tier: string, expiresAt: string | null) => Promise<void>;
+  deleteUser: (email: string) => Promise<void>;
+  addSubscriptionPlan: (name: string, price: number, description: string, features: string[]) => Promise<void>;
+  editSubscriptionPlan: (id: string, name: string, price: number, description: string, features: string[]) => Promise<void>;
+  deleteSubscriptionPlan: (id: string) => Promise<void>;
+  addCoach: (input: CoachAccountInput) => Promise<"success" | "duplicate-email" | "invalid">;
+  editCoach: (id: string, input: CoachAccountInput) => Promise<"success" | "duplicate-email" | "invalid">;
+  deleteCoach: (id: string) => Promise<void>;
+  updateCoachProfile: (id: string, profile: Pick<Coach, "specialization" | "bio" | "phoneNumber" | "avatarUrl">) => Promise<void>;
+  addEquipment: (name: string, type: Equipment["type"], quantity: number, status: Equipment["status"]) => Promise<void>;
+  editEquipment: (id: string, name: string, type: Equipment["type"], quantity: number, status: Equipment["status"]) => Promise<void>;
+  deleteEquipment: (id: string) => Promise<void>;
+  addGymClass: (name: string, description: string, image: string) => Promise<void>;
+  editGymClass: (id: string, name: string, description: string, image: string) => Promise<void>;
+  deleteGymClass: (id: string) => Promise<void>;
+  assignCoachToClass: (classId: string, coachId: string | null) => Promise<void>;
+  addClassSchedule: (classId: string, slot: Omit<ClassSchedule, "id">) => Promise<boolean>;
+  editClassSchedule: (classId: string, slot: ClassSchedule) => Promise<boolean>;
+  deleteClassSchedule: (classId: string, slotId: string) => Promise<void>;
+  addMessage: (name: string, email: string, message: string) => Promise<void>;
+  markMessageRead: (id: string, read: boolean) => Promise<void>;
+  deleteMessage: (id: string) => Promise<void>;
 };
-
-const AUTH_STORAGE_KEY = "evogym_mock_user";
-const USERS_STORAGE_KEY = "evogym_mock_users";
-const SUBSCRIPTION_PLANS_STORAGE_KEY = "evogym_mock_subscription_plans";
-const COACHES_STORAGE_KEY = "evogym_mock_coaches";
-const EQUIPMENT_STORAGE_KEY = "evogym_mock_equipment";
-const GYM_CLASSES_STORAGE_KEY = "evogym_mock_gym_classes";
-const WEIGHT_CLASS_RESTORE_KEY = "evogym_weight_class_restored_v1";
-const MESSAGES_STORAGE_KEY = "evogym_mock_messages";
-
-const DEMO_EMAIL = "demo@gym.com";
-const DEMO_PASSWORD = "password";
-
-const ADMIN_EMAIL = "admin@gym.com";
-const ADMIN_PASSWORD = "adminpassword";
-
-const COACH_EMAIL = "coach@gym.com";
-const COACH_PASSWORD = "coachpassword";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-type Props = {
-  children: ReactNode;
-};
+function mapBackendUserToFrontend(u: BackendUser): User {
+  return {
+    name: u.name,
+    email: u.email,
+    role: u.role.toLowerCase() as "member" | "coach" | "admin",
+    coachId: u.coachProfile?.id || (u as any).coachId,
+    membershipStatus: u.activeMembership ? u.activeMembership.plan.name : "None",
+    subscriptionExpiresAt: u.activeMembership ? u.activeMembership.expiresAt : null,
+    avatarUrl: u.avatarUrl || "",
+    phoneNumber: u.phoneNumber || "",
+    personalGoals: u.personalGoals || "",
+  };
+}
 
-export const AuthProvider = ({ children }: Props) => {
+function mapBackendPlanToFrontend(p: BackendPlan): SubscriptionPlan {
+  return {
+    id: p.id,
+    name: p.name,
+    price: p.priceCents,
+    description: p.description,
+    features: p.features,
+  };
+}
+
+function mapBackendCoachToFrontend(c: BackendUser): Coach {
+  return {
+    id: c.coachProfile?.id || c.id,
+    name: c.name,
+    specialization: c.coachProfile?.specialization || "General Fitness",
+    bio: c.coachProfile?.bio || "",
+    email: c.email,
+    phoneNumber: c.phoneNumber || "",
+    avatarUrl: c.avatarUrl || "",
+    accountActive: c.active,
+  };
+}
+
+function mapBackendEquipmentToFrontend(e: BackendEquipment): Equipment {
+  return {
+    id: e.id,
+    name: e.name,
+    type: e.type,
+    status: e.status === "Operational" ? "Operational" : "Under Maintenance",
+    quantity: e.quantity,
+  };
+}
+
+function mapBackendClassToFrontend(c: BackendClass): GymClass {
+  return {
+    id: c.id,
+    name: c.name,
+    description: c.description,
+    image: c.imageUrl || "",
+    coachId: c.coachId || null,
+    schedule: (c.schedules || []).map((s) => ({
+      id: s.id,
+      weekday: s.weekday.toLowerCase() as Weekday,
+      startTime: s.startTime,
+      durationMinutes: s.durationMinutes,
+      capacity: s.capacity,
+    })),
+  };
+}
+
+function mapBackendMessageToFrontend(m: BackendMessage): ContactMessage {
+  return {
+    id: m.id,
+    name: m.name,
+    email: m.email,
+    message: m.message,
+    receivedAt: m.createdAt,
+    read: m.status !== "UNREAD",
+  };
+}
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [subscriptionPlans, setSubscriptionPlans] = useState<SubscriptionPlan[]>([]);
@@ -105,550 +206,382 @@ export const AuthProvider = ({ children }: Props) => {
   const [gymClasses, setGymClasses] = useState<GymClass[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
 
-  useEffect(() => {
-    // 1. Seed subscription plans
-    const storedPlans = window.localStorage.getItem(SUBSCRIPTION_PLANS_STORAGE_KEY);
-    let finalPlans = INITIAL_SUBSCRIPTION_PLANS;
-    if (storedPlans) {
-      const parsed = JSON.parse(storedPlans) as SubscriptionPlan[];
-      finalPlans = parsed.map(plan => {
-        const initial = INITIAL_SUBSCRIPTION_PLANS.find(p => p.id === plan.id);
-        if (initial) {
-          return { ...plan, price: initial.price };
-        }
-        return plan;
-      });
-      window.localStorage.setItem(SUBSCRIPTION_PLANS_STORAGE_KEY, JSON.stringify(finalPlans));
-    } else {
-      window.localStorage.setItem(
-        SUBSCRIPTION_PLANS_STORAGE_KEY,
-        JSON.stringify(INITIAL_SUBSCRIPTION_PLANS)
-      );
-    }
-    setSubscriptionPlans(finalPlans);
-
-    // 2. Seed coaches
-    const storedCoaches = window.localStorage.getItem(COACHES_STORAGE_KEY);
-    let finalCoaches = INITIAL_COACHES;
-    if (storedCoaches) {
-      const parsed = JSON.parse(storedCoaches) as Partial<Coach>[];
-      finalCoaches = parsed.map((coach, index) => ({
-        id: coach.id ?? `coach-${index + 1}`,
-        name: coach.name ?? "Coach",
-        specialization: coach.specialization ?? "",
-        bio: coach.bio ?? "",
-        email: coach.email ?? (coach.id === "coach-1" ? COACH_EMAIL : ""),
-        phoneNumber: coach.phoneNumber ?? "",
-        avatarUrl: coach.avatarUrl ?? "",
-        accountActive: coach.accountActive ?? coach.id === "coach-1",
-      }));
-    }
-    window.localStorage.setItem(COACHES_STORAGE_KEY, JSON.stringify(finalCoaches));
-    setCoaches(finalCoaches);
-
-    // 3. Seed equipment
-    const storedEquipment = window.localStorage.getItem(EQUIPMENT_STORAGE_KEY);
-    let finalEquipment = INITIAL_EQUIPMENT;
-    if (storedEquipment) {
-      finalEquipment = JSON.parse(storedEquipment) as Equipment[];
-    } else {
-      window.localStorage.setItem(EQUIPMENT_STORAGE_KEY, JSON.stringify(INITIAL_EQUIPMENT));
-    }
-    setEquipment(finalEquipment);
-
-    // 4. Seed gym classes
-    const storedClasses = window.localStorage.getItem(GYM_CLASSES_STORAGE_KEY);
-    let finalClasses = INITIAL_CLASSES;
-    if (storedClasses) {
-      const parsed = JSON.parse(storedClasses) as Partial<GymClass>[];
-      finalClasses = parsed.map((gymClass, index) => {
-        const initialClass = INITIAL_CLASSES.find((item) => item.id === gymClass.id);
-        return {
-          id: gymClass.id ?? `class-${Date.now()}-${index}`,
-          name: gymClass.name ?? "Gym Class",
-          description: gymClass.description ?? "",
-          image: gymClass.image ?? "",
-          coachId: gymClass.coachId === undefined ? initialClass?.coachId ?? null : gymClass.coachId,
-          schedule: gymClass.schedule ?? initialClass?.schedule ?? [],
-        };
-      });
-    }
-    if (!window.localStorage.getItem(WEIGHT_CLASS_RESTORE_KEY)) {
-      const originalWeightClass = INITIAL_CLASSES.find((gymClass) => gymClass.id === "class-1");
-      if (originalWeightClass && !finalClasses.some((gymClass) => gymClass.id === originalWeightClass.id)) {
-        finalClasses = [originalWeightClass, ...finalClasses];
-      }
-      window.localStorage.setItem(WEIGHT_CLASS_RESTORE_KEY, "true");
-    }
-    window.localStorage.setItem(GYM_CLASSES_STORAGE_KEY, JSON.stringify(finalClasses));
-    setGymClasses(finalClasses);
-
-    // 5. Seed users (includes demo member & admin user)
-    const storedUsers = window.localStorage.getItem(USERS_STORAGE_KEY);
-    let finalUsers: User[] = [];
-    if (storedUsers) {
-      finalUsers = (JSON.parse(storedUsers) as User[]).map((stored) => {
-        if (stored.email.toLowerCase() === DEMO_EMAIL) return { ...stored, password: DEMO_PASSWORD };
-        if (stored.email.toLowerCase() === ADMIN_EMAIL) return { ...stored, password: ADMIN_PASSWORD };
-        return stored;
-      });
-    } else {
-      const defaultExpires = new Date();
-      defaultExpires.setDate(defaultExpires.getDate() + 30);
-
-      finalUsers = [
-        {
-          name: "Demo Member",
-          email: DEMO_EMAIL,
-          role: "member",
-          password: DEMO_PASSWORD,
-          membershipStatus: "Plan 2",
-          subscriptionExpiresAt: defaultExpires.toISOString(),
-        },
-        {
-          name: "System Admin",
-          email: ADMIN_EMAIL,
-          role: "admin",
-          password: ADMIN_PASSWORD,
-          membershipStatus: "None",
-          subscriptionExpiresAt: null,
-        },
-      ];
-    }
-    const demoCoach = finalCoaches.find((coach) => coach.id === "coach-1");
-    if (demoCoach && !finalUsers.some((stored) => stored.email.toLowerCase() === COACH_EMAIL)) {
-      finalUsers.push({
-        name: demoCoach.name,
-        email: COACH_EMAIL,
-        password: COACH_PASSWORD,
-        role: "coach",
-        coachId: demoCoach.id,
-        membershipStatus: "None",
-        subscriptionExpiresAt: null,
-        phoneNumber: demoCoach.phoneNumber,
-        avatarUrl: demoCoach.avatarUrl,
-      });
-    }
-    window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(finalUsers));
-    setUsers(finalUsers);
-
-    // 5. Seed messages inbox
-    const storedMessages = window.localStorage.getItem(MESSAGES_STORAGE_KEY);
-    if (storedMessages) {
-      setMessages(JSON.parse(storedMessages) as ContactMessage[]);
-    } else {
-      window.localStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify([]));
-    }
-
-    // 6. Resume active user session
-    const storedUser = window.localStorage.getItem(AUTH_STORAGE_KEY);
-    if (storedUser) {
-      const session = JSON.parse(storedUser) as User;
-      setUser(finalUsers.find((stored) => stored.email.toLowerCase() === session.email.toLowerCase()) ?? null);
+  const loadPublicData = useCallback(async () => {
+    try {
+      const [plansRes, coachesRes, eqRes, classesRes] = await Promise.all([
+        fetchPlans().catch(() => ({ plans: [] })),
+        fetchCoaches().catch(() => ({ coaches: [] })),
+        fetchEquipment().catch(() => ({ equipment: [] })),
+        fetchClasses().catch(() => ({ classes: [] })),
+      ]);
+      setSubscriptionPlans((plansRes.plans || []).map(mapBackendPlanToFrontend));
+      setCoaches((coachesRes.coaches || []).map(mapBackendCoachToFrontend));
+      setEquipment((eqRes.equipment || []).map(mapBackendEquipmentToFrontend));
+      setGymClasses((classesRes.classes || []).map(mapBackendClassToFrontend));
+    } catch (e) {
+      console.error("Failed loading public data:", e);
     }
   }, []);
 
-  const saveUser = (nextUser: User) => {
-    setUser(nextUser);
-    window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextUser));
+  const loadAdminData = useCallback(async () => {
+    try {
+      const [usersRes, msgsRes] = await Promise.all([
+        fetchAdminUsers().catch(() => ({ users: [] })),
+        fetchContactMessagesByAdmin().catch(() => ({ messages: [] })),
+      ]);
+      setUsers((usersRes.users || []).map(mapBackendUserToFrontend));
+      setMessages((msgsRes.messages || []).map(mapBackendMessageToFrontend));
+    } catch (e) {
+      console.error("Failed loading admin data:", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPublicData();
+    const token = getToken();
+    if (token) {
+      fetchMe()
+        .then(({ user: u }) => {
+          const mapped = mapBackendUserToFrontend(u);
+          setUser(mapped);
+          if (mapped.role === "admin") {
+            loadAdminData();
+          }
+        })
+        .catch(() => {
+          removeToken();
+          setUser(null);
+        });
+    }
+  }, [loadPublicData, loadAdminData]);
+
+  const login = async (email: string, password: string): Promise<User | null> => {
+    try {
+      const { user: u } = await loginRequest(email, password);
+      const mapped = mapBackendUserToFrontend(u);
+      setUser(mapped);
+      await loadPublicData();
+      if (mapped.role === "admin") {
+        await loadAdminData();
+      }
+      return mapped;
+    } catch (error) {
+      return null;
+    }
   };
 
-  const login = (email: string, password: string) => {
-    const normalizedEmail = email.trim().toLowerCase();
-
-    // Check Hardcoded Admin
-    if (normalizedEmail === ADMIN_EMAIL.toLowerCase() && password === ADMIN_PASSWORD) {
-      const adminUser: User = {
-        name: "System Admin",
-        email: ADMIN_EMAIL,
-        role: "admin",
-        membershipStatus: "None",
-        subscriptionExpiresAt: null,
-      };
-      saveUser(adminUser);
-      return true;
+  const register = async (input: RegisterInput): Promise<User | null> => {
+    try {
+      const { user: u } = await registerRequest(input.name, input.email, input.password);
+      const mapped = mapBackendUserToFrontend(u);
+      setUser(mapped);
+      await loadPublicData();
+      return mapped;
+    } catch (error) {
+      return null;
     }
-
-    // Check Users Database
-    const foundUser = users.find((u) => u.email.toLowerCase() === normalizedEmail);
-    if (!foundUser) {
-      return false;
-    }
-
-    if (foundUser.password && password !== foundUser.password) {
-      return false;
-    }
-
-    saveUser(foundUser);
-    return true;
-  };
-
-  const register = ({ name, email, password }: RegisterInput) => {
-    const normalizedEmail = email.trim().toLowerCase();
-    const exists = users.some((u) => u.email.toLowerCase() === normalizedEmail);
-    if (exists) return false;
-
-    const newUser: User = {
-      name,
-      email: normalizedEmail,
-      password,
-      role: "member",
-      membershipStatus: "None",
-      subscriptionExpiresAt: null,
-      phoneNumber: "",
-      personalGoals: "",
-      avatarUrl: "",
-    };
-
-    const nextUsers = [...users, newUser];
-    setUsers(nextUsers);
-    window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(nextUsers));
-    saveUser(newUser);
-    return true;
   };
 
   const logout = () => {
+    logoutRequest();
+    removeToken();
     setUser(null);
-    window.localStorage.removeItem(AUTH_STORAGE_KEY);
+    setUsers([]);
+    setMessages([]);
   };
 
-  const persistUserUpdate = (email: string, updater: (currentUser: User) => User) => {
-    const nextUsers = users.map((u) => {
-      if (u.email.toLowerCase() !== email.toLowerCase()) {
-        return u;
-      }
-
-      const updated = updater(u);
-      if (user && user.email.toLowerCase() === email.toLowerCase()) {
-        saveUser(updated);
-      }
-      return updated;
-    });
-
-    setUsers(nextUsers);
-    window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(nextUsers));
-  };
-
-  const updateCurrentUserProfile = (
+  const updateCurrentUserProfile = async (
     profile: Pick<User, "name" | "phoneNumber" | "personalGoals" | "avatarUrl">
   ) => {
-    if (!user) return;
-
-    persistUserUpdate(user.email, (currentUser) => ({
-      ...currentUser,
-      name: profile.name,
-      phoneNumber: profile.phoneNumber,
-      personalGoals: profile.personalGoals,
-      avatarUrl: profile.avatarUrl,
-    }));
-  };
-
-  const subscribeCurrentUser = (planName: string) => {
-    if (!user) return;
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 30);
-    updateUserSubscription(user.email, planName, expiresAt.toISOString());
-  };
-
-  const updateUserSubscription = (email: string, tier: string, expiresAt: string | null) => {
-    const nextUsers = users.map((u) => {
-      if (u.email.toLowerCase() === email.toLowerCase()) {
-        const updated = { ...u, membershipStatus: tier, subscriptionExpiresAt: expiresAt };
-        if (user && user.email.toLowerCase() === email.toLowerCase()) {
-          saveUser(updated);
-        }
-        return updated;
-      }
-      return u;
-    });
-    setUsers(nextUsers);
-    window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(nextUsers));
-  };
-
-  const deleteUser = (email: string) => {
-    const nextUsers = users.filter((u) => u.email.toLowerCase() !== email.toLowerCase());
-    setUsers(nextUsers);
-    window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(nextUsers));
-    if (user && user.email.toLowerCase() === email.toLowerCase()) {
-      logout();
+    try {
+      const { user: u } = await updateMeProfileRequest(profile);
+      setUser(mapBackendUserToFrontend(u));
+    } catch (e) {
+      console.error("updateCurrentUserProfile error:", e);
     }
   };
 
-  const addSubscriptionPlan = (
-    name: string,
-    price: number,
-    description: string,
-    features: string[]
-  ) => {
-    const newPlan: SubscriptionPlan = {
-      id: `plan-${Date.now()}`,
-      name,
-      price,
-      description,
-      features,
-    };
-    const nextPlans = [...subscriptionPlans, newPlan];
-    setSubscriptionPlans(nextPlans);
-    window.localStorage.setItem(SUBSCRIPTION_PLANS_STORAGE_KEY, JSON.stringify(nextPlans));
+  const subscribeCurrentUser = async (planName: string) => {
+    try {
+      const targetPlan = subscriptionPlans.find((p) => p.name.toLowerCase() === planName.toLowerCase());
+      if (!targetPlan) return;
+      await selfAssignMembershipRequest(targetPlan.id);
+      const { user: u } = await fetchMe();
+      setUser(mapBackendUserToFrontend(u));
+    } catch (e) {
+      console.error("subscribeCurrentUser error:", e);
+    }
   };
 
-  const editSubscriptionPlan = (
-    id: string,
-    name: string,
-    price: number,
-    description: string,
-    features: string[]
-  ) => {
-    const nextPlans = subscriptionPlans.map((plan) =>
-      plan.id === id ? { ...plan, name, price, description, features } : plan
-    );
-    setSubscriptionPlans(nextPlans);
-    window.localStorage.setItem(SUBSCRIPTION_PLANS_STORAGE_KEY, JSON.stringify(nextPlans));
+  const updateUserSubscription = async (email: string, _tier: string, _expiresAt: string | null) => {
+    try {
+      const targetUser = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+      if (!targetUser) return;
+      if (_tier === "None" || !_expiresAt) {
+        await fetchAdminUsers();
+        await loadAdminData();
+        return;
+      }
+      const targetPlan = subscriptionPlans.find((p) => p.name.toLowerCase() === _tier.toLowerCase()) || subscriptionPlans[0];
+      if (!targetPlan) return;
+      const backendUsers = await fetchAdminUsers();
+      const bUser = backendUsers.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+      if (!bUser) return;
+      const startsAt = new Date().toISOString();
+      const expiresAt = _expiresAt;
+      await assignMembershipRequest(bUser.id, targetPlan.id, startsAt, expiresAt);
+      await loadAdminData();
+    } catch (e) {
+      console.error("updateUserSubscription error:", e);
+    }
   };
 
-  const deleteSubscriptionPlan = (id: string) => {
-    const nextPlans = subscriptionPlans.filter((plan) => plan.id !== id);
-    setSubscriptionPlans(nextPlans);
-    window.localStorage.setItem(SUBSCRIPTION_PLANS_STORAGE_KEY, JSON.stringify(nextPlans));
+  const deleteUser = async (email: string) => {
+    try {
+      const backendUsers = await fetchAdminUsers();
+      const bUser = backendUsers.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+      if (bUser) {
+        await deactivateUserRequest(bUser.id);
+        await loadAdminData();
+      }
+    } catch (e) {
+      console.error("deleteUser error:", e);
+    }
   };
 
-  // Coach account operations
-  const addCoach = (input: CoachAccountInput) => {
-    const email = input.email.trim().toLowerCase();
-    if (!input.name.trim() || !input.specialization.trim() || !email || !input.password) return "invalid";
-    if (users.some((stored) => stored.email.toLowerCase() === email)) return "duplicate-email";
-
-    const newCoach: Coach = {
-      id: `coach-${Date.now()}`,
-      name: input.name.trim(),
-      specialization: input.specialization.trim(),
-      bio: input.bio.trim(),
-      email,
-      phoneNumber: "",
-      avatarUrl: "",
-      accountActive: true,
-    };
-    const nextCoaches = [...coaches, newCoach];
-    const nextUsers = [...users, {
-      name: newCoach.name,
-      email,
-      password: input.password,
-      role: "coach" as const,
-      coachId: newCoach.id,
-      membershipStatus: "None",
-      subscriptionExpiresAt: null,
-      phoneNumber: "",
-      avatarUrl: "",
-    }];
-    setCoaches(nextCoaches);
-    setUsers(nextUsers);
-    window.localStorage.setItem(COACHES_STORAGE_KEY, JSON.stringify(nextCoaches));
-    window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(nextUsers));
-    return "success";
+  const addSubscriptionPlan = async (_name: string, _price: number, _description: string, _features: string[]) => {
+    console.warn("Dynamic plan creation is managed via seed or direct DB in current version");
   };
 
-  const editCoach = (id: string, input: CoachAccountInput) => {
-    const currentCoach = coaches.find((coach) => coach.id === id);
-    if (!currentCoach) return "invalid";
-    const linkedUser = users.find((stored) => stored.coachId === id);
-    const email = input.email.trim().toLowerCase();
-    if (!input.name.trim() || !input.specialization.trim() || !email || (!input.password && !linkedUser?.password)) return "invalid";
-    if (users.some((stored) => stored.email.toLowerCase() === email && stored.coachId !== id)) return "duplicate-email";
-
-    const updatedCoach: Coach = {
-      ...currentCoach,
-      name: input.name.trim(),
-      specialization: input.specialization.trim(),
-      bio: input.bio.trim(),
-      email,
-      accountActive: true,
-    };
-    const nextCoaches = coaches.map((coach) => coach.id === id ? updatedCoach : coach);
-    const coachUser: User = {
-      ...(linkedUser ?? {
-        role: "coach" as const,
-        coachId: id,
-        membershipStatus: "None",
-        subscriptionExpiresAt: null,
-      }),
-      name: updatedCoach.name,
-      email,
-      password: input.password || linkedUser?.password,
-      role: "coach",
-      coachId: id,
-      phoneNumber: updatedCoach.phoneNumber,
-      avatarUrl: updatedCoach.avatarUrl,
-    };
-    const nextUsers = linkedUser
-      ? users.map((stored) => stored.coachId === id ? coachUser : stored)
-      : [...users, coachUser];
-    setCoaches(nextCoaches);
-    setUsers(nextUsers);
-    window.localStorage.setItem(COACHES_STORAGE_KEY, JSON.stringify(nextCoaches));
-    window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(nextUsers));
-    if (user?.coachId === id) saveUser(coachUser);
-    return "success";
+  const editSubscriptionPlan = async (_id: string, _name: string, _price: number, _description: string, _features: string[]) => {
+    console.warn("Dynamic plan editing is managed via seed or direct DB in current version");
   };
 
-  const deleteCoach = (id: string) => {
-    const nextCoaches = coaches.filter((c) => c.id !== id);
-    const nextUsers = users.filter((stored) => stored.coachId !== id);
-    const nextClasses = gymClasses.map((gymClass) => gymClass.coachId === id ? { ...gymClass, coachId: null } : gymClass);
-    setCoaches(nextCoaches);
-    setUsers(nextUsers);
-    setGymClasses(nextClasses);
-    window.localStorage.setItem(COACHES_STORAGE_KEY, JSON.stringify(nextCoaches));
-    window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(nextUsers));
-    window.localStorage.setItem(GYM_CLASSES_STORAGE_KEY, JSON.stringify(nextClasses));
+  const deleteSubscriptionPlan = async (_id: string) => {
+    console.warn("Dynamic plan deletion is managed via seed or direct DB in current version");
   };
 
-  const updateCoachProfile = (
+  const addCoach = async (input: CoachAccountInput): Promise<"success" | "duplicate-email" | "invalid"> => {
+    try {
+      if (!input.name.trim() || !input.specialization.trim() || !input.email || !input.password) {
+        return "invalid";
+      }
+      await createCoachByAdmin(input);
+      await loadPublicData();
+      await loadAdminData();
+      return "success";
+    } catch (error: any) {
+      if (error?.status === 409 || error?.message?.toLowerCase().includes("exists")) {
+        return "duplicate-email";
+      }
+      return "invalid";
+    }
+  };
+
+  const editCoach = async (id: string, input: CoachAccountInput): Promise<"success" | "duplicate-email" | "invalid"> => {
+    try {
+      const bUsers = await fetchAdminUsers();
+      const targetUser = bUsers.users.find((u) => u.coachProfile?.id === id || u.id === id);
+      if (!targetUser) return "invalid";
+      await updateCoachProfileByAdmin(targetUser.id, {
+        specialization: input.specialization,
+        bio: input.bio,
+      });
+      await loadPublicData();
+      await loadAdminData();
+      return "success";
+    } catch (error: any) {
+      return "invalid";
+    }
+  };
+
+  const deleteCoach = async (id: string) => {
+    try {
+      const bUsers = await fetchAdminUsers();
+      const targetUser = bUsers.users.find((u) => u.coachProfile?.id === id || u.id === id);
+      if (targetUser) {
+        await deactivateUserRequest(targetUser.id);
+        await loadPublicData();
+        await loadAdminData();
+      }
+    } catch (e) {
+      console.error("deleteCoach error:", e);
+    }
+  };
+
+  const updateCoachProfile = async (
     id: string,
     profile: Pick<Coach, "specialization" | "bio" | "phoneNumber" | "avatarUrl">
   ) => {
-    const nextCoaches = coaches.map((coach) => coach.id === id ? { ...coach, ...profile } : coach);
-    const nextUsers = users.map((stored) => stored.coachId === id
-      ? { ...stored, phoneNumber: profile.phoneNumber, avatarUrl: profile.avatarUrl }
-      : stored
-    );
-    setCoaches(nextCoaches);
-    setUsers(nextUsers);
-    window.localStorage.setItem(COACHES_STORAGE_KEY, JSON.stringify(nextCoaches));
-    window.localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(nextUsers));
-    const activeCoachUser = nextUsers.find((stored) => stored.coachId === id);
-    if (user?.coachId === id && activeCoachUser) saveUser(activeCoachUser);
+    try {
+      const bUsers = await fetchAdminUsers();
+      const targetUser = bUsers.users.find((u) => u.coachProfile?.id === id || u.id === id);
+      if (targetUser) {
+        await updateCoachProfileByAdmin(targetUser.id, {
+          specialization: profile.specialization,
+          bio: profile.bio,
+          avatarUrl: profile.avatarUrl,
+        });
+        await loadPublicData();
+        await loadAdminData();
+      }
+    } catch (e) {
+      console.error("updateCoachProfile error:", e);
+    }
   };
 
-  // Equipment operations
-  const addEquipment = (
+  const addEquipment = async (
     name: string,
     type: Equipment["type"],
     quantity: number,
     status: Equipment["status"]
   ) => {
-    const newEq: Equipment = {
-      id: `eq-${Date.now()}`,
-      name,
-      type,
-      quantity,
-      status,
-    };
-    const nextEq = [...equipment, newEq];
-    setEquipment(nextEq);
-    window.localStorage.setItem(EQUIPMENT_STORAGE_KEY, JSON.stringify(nextEq));
+    try {
+      await createEquipmentByAdmin({
+        name,
+        type,
+        quantity,
+        status: status === "Operational" ? "Operational" : "Under_Maintenance",
+      });
+      await loadPublicData();
+    } catch (e) {
+      console.error("addEquipment error:", e);
+    }
   };
 
-  const editEquipment = (
+  const editEquipment = async (
     id: string,
     name: string,
     type: Equipment["type"],
     quantity: number,
     status: Equipment["status"]
   ) => {
-    const nextEq = equipment.map((e) =>
-      e.id === id ? { ...e, name, type, quantity, status } : e
-    );
-    setEquipment(nextEq);
-    window.localStorage.setItem(EQUIPMENT_STORAGE_KEY, JSON.stringify(nextEq));
+    try {
+      await updateEquipmentByAdmin(id, {
+        name,
+        type,
+        quantity,
+        status: status === "Operational" ? "Operational" : "Under_Maintenance",
+      });
+      await loadPublicData();
+    } catch (e) {
+      console.error("editEquipment error:", e);
+    }
   };
 
-  const deleteEquipment = (id: string) => {
-    const nextEq = equipment.filter((e) => e.id !== id);
-    setEquipment(nextEq);
-    window.localStorage.setItem(EQUIPMENT_STORAGE_KEY, JSON.stringify(nextEq));
+  const deleteEquipment = async (id: string) => {
+    try {
+      await deleteEquipmentByAdmin(id);
+      await loadPublicData();
+    } catch (e) {
+      console.error("deleteEquipment error:", e);
+    }
   };
 
-  // Gym Classes CRUD
-  const addGymClass = (name: string, description: string, image: string) => {
-    const newClass: GymClass = { id: `class-${Date.now()}`, name, description, image, coachId: null, schedule: [] };
-    const next = [...gymClasses, newClass];
-    setGymClasses(next);
-    window.localStorage.setItem(GYM_CLASSES_STORAGE_KEY, JSON.stringify(next));
+  const addGymClass = async (name: string, description: string, image: string) => {
+    try {
+      await createClassByAdmin({ name, description, imageUrl: image });
+      await loadPublicData();
+    } catch (e) {
+      console.error("addGymClass error:", e);
+    }
   };
 
-  const editGymClass = (id: string, name: string, description: string, image: string) => {
-    const next = gymClasses.map((c) => (c.id === id ? { ...c, name, description, image } : c));
-    setGymClasses(next);
-    window.localStorage.setItem(GYM_CLASSES_STORAGE_KEY, JSON.stringify(next));
+  const editGymClass = async (id: string, name: string, description: string, image: string) => {
+    try {
+      await updateClassByAdmin(id, { name, description, imageUrl: image });
+      await loadPublicData();
+    } catch (e) {
+      console.error("editGymClass error:", e);
+    }
   };
 
-  const deleteGymClass = (id: string) => {
-    const next = gymClasses.filter((c) => c.id !== id);
-    setGymClasses(next);
-    window.localStorage.setItem(GYM_CLASSES_STORAGE_KEY, JSON.stringify(next));
+  const deleteGymClass = async (id: string) => {
+    try {
+      await deleteClassByAdmin(id);
+      await loadPublicData();
+    } catch (e) {
+      console.error("deleteGymClass error:", e);
+    }
   };
 
-  const assignCoachToClass = (classId: string, coachId: string | null) => {
-    const next = gymClasses.map((gymClass) => gymClass.id === classId ? { ...gymClass, coachId } : gymClass);
-    setGymClasses(next);
-    window.localStorage.setItem(GYM_CLASSES_STORAGE_KEY, JSON.stringify(next));
+  const assignCoachToClass = async (classId: string, coachId: string | null) => {
+    try {
+      await assignCoachToClassByAdmin(classId, coachId);
+      await loadPublicData();
+    } catch (e) {
+      console.error("assignCoachToClass error:", e);
+    }
   };
 
-  const isValidSchedule = (slot: Omit<ClassSchedule, "id"> | ClassSchedule) =>
-    /^([01]\d|2[0-3]):[0-5]\d$/.test(slot.startTime) && slot.durationMinutes > 0 && slot.capacity > 0;
-
-  const addClassSchedule = (classId: string, slot: Omit<ClassSchedule, "id">) => {
-    const target = gymClasses.find((gymClass) => gymClass.id === classId);
-    if (!target || !isValidSchedule(slot)) return false;
-    if (target.schedule.some((item) => item.weekday === slot.weekday && item.startTime === slot.startTime)) return false;
-    const nextSlot: ClassSchedule = { ...slot, id: `slot-${Date.now()}` };
-    const next = gymClasses.map((gymClass) => gymClass.id === classId
-      ? { ...gymClass, schedule: [...gymClass.schedule, nextSlot] }
-      : gymClass
-    );
-    setGymClasses(next);
-    window.localStorage.setItem(GYM_CLASSES_STORAGE_KEY, JSON.stringify(next));
-    return true;
+  const addClassSchedule = async (classId: string, slot: Omit<ClassSchedule, "id">): Promise<boolean> => {
+    try {
+      await createScheduleSlotByAdmin(classId, {
+        weekday: slot.weekday.toUpperCase(),
+        startTime: slot.startTime,
+        durationMinutes: slot.durationMinutes,
+        capacity: slot.capacity,
+      });
+      await loadPublicData();
+      return true;
+    } catch (e) {
+      console.error("addClassSchedule error:", e);
+      return false;
+    }
   };
 
-  const editClassSchedule = (classId: string, slot: ClassSchedule) => {
-    const target = gymClasses.find((gymClass) => gymClass.id === classId);
-    if (!target || !isValidSchedule(slot)) return false;
-    if (target.schedule.some((item) => item.id !== slot.id && item.weekday === slot.weekday && item.startTime === slot.startTime)) return false;
-    const next = gymClasses.map((gymClass) => gymClass.id === classId
-      ? { ...gymClass, schedule: gymClass.schedule.map((item) => item.id === slot.id ? slot : item) }
-      : gymClass
-    );
-    setGymClasses(next);
-    window.localStorage.setItem(GYM_CLASSES_STORAGE_KEY, JSON.stringify(next));
-    return true;
+  const editClassSchedule = async (_classId: string, slot: ClassSchedule): Promise<boolean> => {
+    try {
+      await updateScheduleSlotByAdmin(slot.id, {
+        weekday: slot.weekday.toUpperCase(),
+        startTime: slot.startTime,
+        durationMinutes: slot.durationMinutes,
+        capacity: slot.capacity,
+      });
+      await loadPublicData();
+      return true;
+    } catch (e) {
+      console.error("editClassSchedule error:", e);
+      return false;
+    }
   };
 
-  const deleteClassSchedule = (classId: string, slotId: string) => {
-    const next = gymClasses.map((gymClass) => gymClass.id === classId
-      ? { ...gymClass, schedule: gymClass.schedule.filter((slot) => slot.id !== slotId) }
-      : gymClass
-    );
-    setGymClasses(next);
-    window.localStorage.setItem(GYM_CLASSES_STORAGE_KEY, JSON.stringify(next));
+  const deleteClassSchedule = async (_classId: string, slotId: string) => {
+    try {
+      await deleteScheduleSlotByAdmin(slotId);
+      await loadPublicData();
+    } catch (e) {
+      console.error("deleteClassSchedule error:", e);
+    }
   };
 
-  // Messages (inbox) operations
-  const addMessage = (name: string, email: string, message: string) => {
-    const newMsg: ContactMessage = {
-      id: `msg-${Date.now()}`,
-      name,
-      email,
-      message,
-      receivedAt: new Date().toISOString(),
-      read: false,
-    };
-    const nextMessages = [newMsg, ...messages];
-    setMessages(nextMessages);
-    window.localStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(nextMessages));
+  const addMessage = async (name: string, email: string, message: string) => {
+    try {
+      await submitContactMessage({ name, email, message });
+      if (user?.role === "admin") {
+        await loadAdminData();
+      }
+    } catch (e) {
+      console.error("addMessage error:", e);
+    }
   };
 
-  const markMessageRead = (id: string, read: boolean) => {
-    const nextMessages = messages.map((m) => (m.id === id ? { ...m, read } : m));
-    setMessages(nextMessages);
-    window.localStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(nextMessages));
+  const markMessageRead = async (id: string, read: boolean) => {
+    try {
+      await updateMessageStatusByAdmin(id, read ? "READ" : "UNREAD");
+      await loadAdminData();
+    } catch (e) {
+      console.error("markMessageRead error:", e);
+    }
   };
 
-  const deleteMessage = (id: string) => {
-    const nextMessages = messages.filter((m) => m.id !== id);
-    setMessages(nextMessages);
-    window.localStorage.setItem(MESSAGES_STORAGE_KEY, JSON.stringify(nextMessages));
+  const deleteMessage = async (id: string) => {
+    try {
+      await deleteContactMessageByAdmin(id);
+      await loadAdminData();
+    } catch (e) {
+      console.error("deleteMessage error:", e);
+    }
   };
 
   const value = useMemo(
@@ -697,10 +630,8 @@ export const AuthProvider = ({ children }: Props) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-
   if (!context) {
     throw new Error("useAuth must be used inside AuthProvider");
   }
-
   return context;
 };

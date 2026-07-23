@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: evogym_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: evogym
+      POSTGRES_PASSWORD: evogym_password
+      POSTGRES_DB: evogym_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

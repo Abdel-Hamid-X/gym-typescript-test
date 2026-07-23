@@ -57,17 +57,17 @@ const CoachDashboard = () => {
     reader.readAsDataURL(file);
   };
 
-  const saveProfile = (event: React.FormEvent) => {
+  const saveProfile = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!coach) return;
-    updateCoachProfile(coach.id, { specialization, bio, phoneNumber, avatarUrl });
+    await updateCoachProfile(coach.id, { specialization, bio, phoneNumber, avatarUrl });
     setMessage(t("coach_profile_saved"));
   };
 
-  const saveClass = (event: React.FormEvent) => {
+  const saveClass = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!editingClass || !assignedClasses.some((item) => item.id === editingClass.id)) return;
-    editGymClass(editingClass.id, editingClass.name, editingClass.description, editingClass.image);
+    await editGymClass(editingClass.id, editingClass.name, editingClass.description, editingClass.image);
     setEditingClass(null);
     setMessage(t("coach_class_saved"));
   };

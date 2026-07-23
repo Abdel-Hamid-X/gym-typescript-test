@@ -4,9 +4,9 @@ import { useLanguage } from "./LanguageContext";
 
 type Props = {
   gymClass: GymClass;
-  addSlot: (classId: string, slot: Omit<ClassSchedule, "id">) => boolean;
-  editSlot: (classId: string, slot: ClassSchedule) => boolean;
-  deleteSlot: (classId: string, slotId: string) => void;
+  addSlot: (classId: string, slot: Omit<ClassSchedule, "id">) => boolean | Promise<boolean>;
+  editSlot: (classId: string, slot: ClassSchedule) => boolean | Promise<boolean>;
+  deleteSlot: (classId: string, slotId: string) => void | Promise<void>;
 };
 
 const WEEKDAYS: Weekday[] = [
@@ -58,12 +58,12 @@ const ClassScheduleEditor = ({ gymClass, addSlot, editSlot, deleteSlot }: Props)
     setError("");
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const slot = { weekday, startTime, durationMinutes, capacity };
-    const success = editingId
+    const success = await (editingId
       ? editSlot(gymClass.id, { ...slot, id: editingId })
-      : addSlot(gymClass.id, slot);
+      : addSlot(gymClass.id, slot));
     if (!success) {
       setError(t("schedule_conflict"));
       return;

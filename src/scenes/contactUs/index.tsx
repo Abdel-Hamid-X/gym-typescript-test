@@ -40,8 +40,8 @@ const ContactUs = ({ setselectedPage }: Props) => {
         formState: { errors },
     } = useForm<FormValues>()
 
-    const onSubmit = (data: FormValues) => {
-        addMessage(data.name, data.email, data.message)
+    const onSubmit = async (data: FormValues) => {
+        await addMessage(data.name, data.email, data.message)
         reset()
         setSubmitted(true)
         setTimeout(() => setSubmitted(false), 5000)

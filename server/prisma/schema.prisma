@@ -1,0 +1,160 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  MEMBER
+  COACH
+  ADMIN
+}
+
+enum MembershipStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum EquipmentType {
+  Strength
+  Cardio
+  Accessories
+  Other
+}
+
+enum EquipmentStatus {
+  Operational
+  Under_Maintenance
+}
+
+enum MessageStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+model User {
+  id               String            @id @default(uuid())
+  name             String
+  email            String            @unique
+  passwordHash     String
+  role             Role              @default(MEMBER)
+  phoneNumber      String?
+  personalGoals    String?
+  avatarUrl        String?
+  active           Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  sessions         Session[]
+  coachProfile     CoachProfile?
+  memberships      Membership[]      @relation("MemberMemberships")
+  assignedClasses  GymClass[]        @relation("CoachClasses")
+}
+
+model Session {
+  id         String   @id @default(uuid())
+  userId     String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CoachProfile {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  specialization String
+  bio            String
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SubscriptionPlan {
+  id           String       @id @default(uuid())
+  name         String
+  price        Int
+  description  String
+  features     String[]
+  durationDays Int          @default(30)
+  active       Boolean      @default(true)
+  displayOrder Int          @default(0)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  memberships  Membership[]
+}
+
+model Membership {
+  id         String           @id @default(uuid())
+  memberId   String
+  planId     String
+  status     MembershipStatus @default(ACTIVE)
+  startsAt   DateTime
+  expiresAt  DateTime
+  assignedBy String?
+  notes      String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  member     User             @relation("MemberMemberships", fields: [memberId], references: [id], onDelete: Cascade)
+  plan       SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Restrict)
+}
+
+model GymClass {
+  id          String          @id @default(uuid())
+  name        String
+  description String
+  imageUrl    String?
+  coachId     String?
+  active      Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  coach       User?           @relation("CoachClasses", fields: [coachId], references: [id], onDelete: SetNull)
+  schedules   ClassSchedule[]
+}
+
+model ClassSchedule {
+  id              String   @id @default(uuid())
+  classId         String
+  weekday         String
+  startTime       String
+  durationMinutes Int
+  capacity        Int
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  gymClass        GymClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+}
+
+model Equipment {
+  id        String          @id @default(uuid())
+  name      String
+  type      EquipmentType
+  quantity  Int             @default(1)
+  status    EquipmentStatus @default(Operational)
+  notes     String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+model ContactMessage {
+  id        String        @id @default(uuid())
+  name      String
+  email     String
+  message   String
+  status    MessageStatus @default(UNREAD)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}

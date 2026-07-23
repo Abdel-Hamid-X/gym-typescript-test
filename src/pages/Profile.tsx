@@ -84,11 +84,11 @@ const Profile = () => {
     navigate("/", { replace: true });
   };
 
-  const handleProfileSubmit = (e: React.FormEvent) => {
+  const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
-    updateCurrentUserProfile({
+    await updateCurrentUserProfile({
       name: profileName.trim() || user.name,
       phoneNumber,
       personalGoals,

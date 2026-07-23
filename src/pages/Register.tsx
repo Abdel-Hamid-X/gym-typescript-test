@@ -19,7 +19,7 @@ const Register = () => {
     return <Navigate to={getRoleHome(user?.role)} replace />;
   }
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
 
@@ -28,8 +28,8 @@ const Register = () => {
       return;
     }
 
-    const success = register({ name, email, password });
-    if (success) {
+    const newUser = await register({ name, email, password });
+    if (newUser) {
       navigate("/profile", { replace: true });
     } else {
       setError(t("auth_error_existing"));

@@ -156,9 +156,9 @@ const AdminDashboard = () => {
   };
 
   // Coaches logic
-  const handleAddCoach = (e: React.FormEvent) => {
+  const handleAddCoach = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = addCoach({ name: coachName, specialization: coachSpec, bio: coachBio, email: coachEmail, password: coachPassword });
+    const result = await addCoach({ name: coachName, specialization: coachSpec, bio: coachBio, email: coachEmail, password: coachPassword });
     if (result !== "success") {
       setCoachError(t(result === "duplicate-email" ? "admin_coach_duplicate" : "admin_coach_invalid"));
       return;
@@ -171,10 +171,10 @@ const AdminDashboard = () => {
     setCoachError("");
   };
 
-  const handleSaveCoachEdit = (e: React.FormEvent) => {
+  const handleSaveCoachEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingCoach) return;
-    const result = editCoach(editingCoach.id, {
+    const result = await editCoach(editingCoach.id, {
       name: editingCoach.name,
       specialization: editingCoach.specialization,
       bio: editingCoach.bio,
@@ -191,20 +191,20 @@ const AdminDashboard = () => {
   };
 
   // Equipment logic
-  const handleAddEquipment = (e: React.FormEvent) => {
+  const handleAddEquipment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!eqName) return;
-    addEquipment(eqName, eqType, eqQty, eqStatus);
+    await addEquipment(eqName, eqType, eqQty, eqStatus);
     setEqName("");
     setEqType("Strength");
     setEqQty(1);
     setEqStatus("Operational");
   };
 
-  const handleSaveEqEdit = (e: React.FormEvent) => {
+  const handleSaveEqEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingEq) return;
-    editEquipment(editingEq.id, editingEq.name, editingEq.type, editingEq.quantity, editingEq.status);
+    await editEquipment(editingEq.id, editingEq.name, editingEq.type, editingEq.quantity, editingEq.status);
     setEditingEq(null);
   };
 
@@ -934,10 +934,10 @@ export default AdminDashboard;
 type ClassManagerProps = {
   gymClasses: GymClass[];
   coaches: Coach[];
-  addGymClass: (name: string, description: string, image: string) => void;
-  editGymClass: (id: string, name: string, description: string, image: string) => void;
-  deleteGymClass: (id: string) => void;
-  assignCoachToClass: (classId: string, coachId: string | null) => void;
+  addGymClass: (name: string, description: string, image: string) => void | Promise<void>;
+  editGymClass: (id: string, name: string, description: string, image: string) => void | Promise<void>;
+  deleteGymClass: (id: string) => void | Promise<void>;
+  assignCoachToClass: (classId: string, coachId: string | null) => void | Promise<void>;
   addClassSchedule: React.ComponentProps<typeof ClassScheduleEditor>["addSlot"];
   editClassSchedule: React.ComponentProps<typeof ClassScheduleEditor>["editSlot"];
   deleteClassSchedule: React.ComponentProps<typeof ClassScheduleEditor>["deleteSlot"];
@@ -994,14 +994,14 @@ const ClassManagerPanel = ({
     setPreviewUrl(c.image);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const img = editingClass ? editingClass.image : classImage;
     if (!className || !classDesc || !img) return;
     if (editingClass) {
-      editGymClass(editingClass.id, editingClass.name === className ? className : className, classDesc, img);
+      await editGymClass(editingClass.id, editingClass.name === className ? className : className, classDesc, img);
     } else {
-      addGymClass(className, classDesc, img);
+      await addGymClass(className, classDesc, img);
     }
     resetForm();
   };

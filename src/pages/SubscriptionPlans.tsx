@@ -14,8 +14,8 @@ const SubscriptionPlans = () => {
     navigate("/", { replace: true });
   };
 
-  const handleSubscribe = (planName: string) => {
-    subscribeCurrentUser(planName);
+  const handleSubscribe = async (planName: string) => {
+    await subscribeCurrentUser(planName);
     navigate("/profile", { replace: true });
   };
 
